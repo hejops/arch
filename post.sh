@@ -13,6 +13,12 @@ systemctl status NetworkManager.service | grep running || {
 
 ping -c 1 archlinux.org || nmtui
 
+# replace the mirrors from reflector since they're not very good
+
+sudo curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" | sed -r 's|^#Server|Server|' >/etc/pacman.d/mirrorlist
+
+sudo pacman -Syu
+
 # https://www.davidtsadler.com/posts/installing-st-dmenu-and-dwm-in-arch-linux/
 sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger
 
