@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
+# set up partitions for use with chroot
+
 [ "$(hostname)" != archiso ] && exit
 
 CHECK() {
@@ -102,12 +104,45 @@ pacstrap /mnt base linux linux-firmware vi vim git networkmanager syslinux sudo
 
 grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
 
-cat <<EOF
-Pre-chroot setup complete
-In chroot, run
-	git clone https://github.com/hejops/arch
-	cd arch
-	sh chroot.sh
+echo "Hostname:"
+read -r HOSTNAME </dev/tty
+
+cat <<EOF | arch-chroot /mnt
+set -eu #o pipefail
+
+[ "$(pwd)" != /root ] && exit
+
+ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+hwclock --systohc
+
+sed -i -r '/#en_US/ s|#||' /etc/locale.gen
+echo "LANG=en_US.UTF-8" >/etc/locale.conf
+locale-gen
+
+echo "$HOSTNAME" >/etc/hostname
+
+echo "127.0.0.1  localhost" >> /etc/hosts
+echo "::1        localhost" >> /etc/hosts
+echo "127.0.1.1  $HOSTNAME" >> /etc/hosts
+
+mkinitcpio -P
+
+passwd < /dev/tty
+
+mkdir -p /boot/syslinux
+cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
+extlinux --install /boot/syslinux
+sed -i -r 's|sda3|sda1|' /boot/syslinx/syslinux.cfg
+dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
+
+USER=joseph
+
+useradd -m $USER
+passwd $USER < /dev/tty
+usermod -G wheel $USER
+
+echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
+echo "Granted $USER root privileges"
 EOF
 
-arch-chroot /mnt
+echo "Setup complete; reboot into the new system"
