@@ -109,10 +109,12 @@ $INSTALL "${MAIN[@]}"
 # fi
 # # for each line in packages_notfound, suggest an alternative
 
-exit
+xdg-open "https://github.com/settings/tokens/new"
+echo "PAT: "
+read -r PAT
+echo "https://hejops:$PAT@github.com" | tr -d ' ' | tee .git-credentials
 
-# echo "Install miscellaneous packages? [y/N]"
-# read -rp "If this is a work system, they are probably unnecessary. " ans < /dev/tty
+exit
 
 SERVICES=(
 
@@ -131,11 +133,11 @@ systemctl start --user mbsync.timer
 AUR=(
 
 discord-ptb
+font-manager
 gruvbox-dark-gtk
 htop-vim
 lowdown
 playitslowly
-font-manager
 tllocalmgr-git
 urxvt-perls
 
