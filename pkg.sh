@@ -5,11 +5,11 @@ set -euo pipefail
 # exit
 
 usage() {
-cat << EOF
+	cat <<EOF
 Usage: $(basename "$0") [options]
 
 EOF
-exit
+	exit
 }
 
 # [[ $# -eq 0 ]] && usage
@@ -28,98 +28,90 @@ PIPINSTALL="pip3 install"
 # ubuntu installs have lower priority, and user is expected to find missing packages themselves
 MAIN=(
 
-ack
-curl
-dash
-feh
-ffmpeg
-firefox
-flameshot
-fzf
-gnupg
-groff
-htop
-i3lock
-libnotify
-maim
-make
-moreutils
-mpc
-mpd
-mpv
-ncmpcpp
-neomutt
-newsboat
-nodejs
-notmuch
-offlineimap
-pavucontrol
-pcre
-picom
-python-pdftotext
-python3
-ranger
-recode
-rofi
-rxvt-unicode
-shellcheck
-shfmt
-socat
-telegram-desktop
-texlive-bin
-texlive-core
-trizen
-udiskie
-udisks2
-vim
-xdg-utils
-xorg-xbacklight
-xorg-xinit
-xorg-xrandr
-xournalpp
-youtube-dl
-zathura-pdf-mupdf
-zathura-ps
+	ack
+	cronie
+	curl
+	dash
+	exa
+	feh
+	ffmpeg
+	firefox
+	flameshot
+	fzf
+	gnupg
+	groff
+	htop
+	hunspell
+	i3lock
+	inetutils
+	isync
+	libnotify
+	maim
+	make
+	man
+	moreutils
+	mpc
+	mpd
+	mpv
+	ncmpcpp
+	neomutt
+	newsboat
+	nodejs
+	notmuch
+	npm
+	pavucontrol
+	pcre
+	picom
+	python-pdftotext
+	python3
+	ranger
+	recode
+	rofi
+	rsync
+	rxvt-unicode
+	shellcheck
+	shfmt
+	socat
+	telegram-desktop
+	texlive-bin
+	texlive-core
+	trizen
+	udiskie
+	udisks2
+	vim
+	xdg-utils
+	xorg-xbacklight
+	xorg-xinit
+	xorg-xrandr
+	xournalpp
+	youtube-dl
+	zathura-pdf-mupdf
+	zathura-ps
 
 )
-# jupyter-core
-
-# ?lightdm -- https://wiki.archlinux.org/index.php/Display_manager#Console
-# no diplay manager: .xinitrc (exec dwm)
-# try out on new thinkpad
 
 sudo pacman -Syu
 $INSTALL "${MAIN[@]}"
 
-# if [[ $PKGMGR = pacman ]]; then
-# 	:
-# else
-# 	FOUND=()
-# 	# this is quite inefficient...
-# 	for pkg in "${MAIN[@]}"; do
-# 		if $QUERY "^$pkg$"; then
-# 			FOUND+=("$pkg")	# MAIN-= is not allowed
-# 		else
-# 			echo "$pkg" >> packages_notfound
-# 		fi
-# 	done
-# 	echo "${FOUND[@]}"
-# 	exit
-# 	$INSTALL "${FOUND[@]}"
-# fi
-# # for each line in packages_notfound, suggest an alternative
+[[ -f "$HOME/.git-credentials" ]] || {
+	git config --global credential.helper store
+	xdg-open "https://github.com/settings/tokens/new"
+	read -r -p "PAT: " PAT </dev/tty
+	echo "https://hejops:$PAT@github.com" | tr -d ' ' | tee "$HOME/.git-credentials"
+}
 
-xdg-open "https://github.com/settings/tokens/new"
-echo "PAT: "
-read -r PAT
-echo "https://hejops:$PAT@github.com" | tr -d ' ' | tee .git-credentials
+cd
+git clone https://github.com/hejops/dotfiles
+rm -rf "$HOME/.mozilla"
+rsync -vua dotfiles/ .
+xrdb -merge .Xresources
 
 exit
 
 SERVICES=(
 
-mbsync
-mpd
+	mbsync
+	mpd
 
 )
 
@@ -132,14 +124,14 @@ systemctl start --user mbsync.timer
 
 AUR=(
 
-discord-ptb
-font-manager
-gruvbox-dark-gtk
-htop-vim
-lowdown
-playitslowly
-tllocalmgr-git
-urxvt-perls
+	discord-ptb
+	font-manager
+	gruvbox-dark-gtk
+	htop-vim
+	lowdown
+	playitslowly
+	tllocalmgr-git
+	urxvt-perls
 
 )
 
@@ -163,9 +155,9 @@ jupyter nbextension enable --py jupytext --user
 
 # set up credentials
 GIT=(
-dwm
-dotfiles
-scripts
+	dwm
+	dotfiles
+	scripts
 )
 
 # mv dotfiles up
