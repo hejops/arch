@@ -4,7 +4,14 @@ set -eu #o pipefail
 # https://wiki.archlinux.org/title/Installation_guide
 # set up partitions for use with chroot
 
+# https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
+# iwctl --passphrase PASSWORD station wlan0 connect NETWORKNAME
+
 [ "$(hostname)" != archiso ] && exit
+
+ip link
+ping -c 1 archlinux.org > /dev/null
+echo "Network OK"
 
 CHECK() {
 	# "local" is not POSIX-compliant
@@ -38,13 +45,6 @@ else
 	MODE=BIOS
 	echo "BIOS mode"
 fi
-
-ip link
-
-# https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
-# TODO:
-# iwctl --passphrase [passphrase] station [device] connect [SSID]
-until ping -c 1 archlinux.org; do iwctl; done
 
 timedatectl set-ntp true
 
