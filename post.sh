@@ -5,6 +5,7 @@ set -eu
 
 # installs a bare minimum graphical environment after a successful install
 
+# TODO: the service should be enabled from archiso
 systemctl status NetworkManager.service | grep running || {
 	systemctl start NetworkManager.service
 	systemctl enable NetworkManager.service
@@ -21,6 +22,15 @@ cd dwm
 make clean
 sudo make install
 
-echo dwm > .xinitrc
+echo dwm >"$HOME/.xinitrc"
 
-echo "Graphical environment configured. To start dwm, run startx"
+cat <<EOF >"$HOME/.profile"
+if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
+	exec startx
+fi
+EOF
+
+cat <<EOF
+Installed dwm
+dwm will be started automatically after logging back in
+EOF
