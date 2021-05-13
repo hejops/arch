@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
+# WARNING: ALL COMMANDS HERE ARE RUN AS ROOT
+
 [ "$(pwd)" != /root ] && exit
 
 # hostname does not work when chrooted
@@ -40,25 +42,11 @@ cat <<EOF >/etc/hosts
 127.0.1.1  $HOSTNAME
 EOF
 
-# Net
-# nmtui
-
 mkinitcpio -P
 
 passwd
 
-# maybe not in chroot
-# systemctl start NetworkManager.service
-# systemctl enable NetworkManager.service
-
-# https://unix.stackexchange.com/a/329954
-# produces warning:
-# warning: File system `ext2' doesn't support embedding.
-# but this can be ignored, allegedly
-
-# # --recheck
-# grub-install /dev/sda #|| :
-# grub-mkconfig -o /boot/grub/grub.cfg
+# syslinux is less of a pain to configure than grub
 
 mkdir -p /boot/syslinux
 # omitting the copy gives menu-less boot
@@ -66,6 +54,17 @@ cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
 extlinux --install /boot/syslinux
 sed -i -r 's|sda3|sda1|' /boot/syslinx/syslinux.cfg
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
+
+USER=joseph
+
+useradd -m $USER
+passwd $USER
+usermod -G wheel $USER
+
+# https://stackoverflow.com/a/28382838
+echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
+
+echo "Granted $USER root privileges"
 
 echo "Setup complete. Exit from chroot, then reboot the system"
 
