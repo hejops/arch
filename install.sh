@@ -17,6 +17,11 @@ CHECK() {
 # ls /usr/share/kbd/keymaps/**/*.map.gz
 # loadkeys LAYOUT
 
+# the "post-MBR gap" refers to the 2048 kB before the first partition
+# fdisk typically leaves it in place
+# this script uses MBR / BIOS
+# parted -l / ls /sys...
+
 if ls /sys/firmware/efi/efivars; then
 	MODE=UEFI
 	echo "UEFI mode"
@@ -57,6 +62,8 @@ RAM=$((RAM + 1))
 # lsblk | grep 'sd. ' | grep -v T | cut -d' ' -f1
 DEV=/dev/sda
 
+# TODO: MBR
+
 fdisk "$DEV" <<EOF
 n
 p
@@ -68,6 +75,8 @@ p
 2
 
 
+a
+1
 t
 2
 82
@@ -87,8 +96,16 @@ swapon "${DEV}2"
 
 reflector
 
-pacstrap /mnt base linux linux-firmware vim git networkmanager
+pacstrap /mnt base linux linux-firmware vim git networkmanager syslinux
 
 grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
+
+cat <<EOF
+Pre-chroot setup complete
+After chroot, run
+	git clone https://github.com/hejops/arch
+	cd arch
+	sh chroot.sh
+EOF
 
 arch-chroot /mnt
