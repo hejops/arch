@@ -20,6 +20,7 @@ curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=
 sudo pacman -Syu
 
 # https://www.davidtsadler.com/posts/installing-st-dmenu-and-dwm-in-arch-linux/
+# could probably echo \n twice here...
 sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger
 
 cd
@@ -30,7 +31,11 @@ sudo make install
 
 echo dwm >"$HOME/.xinitrc"
 
-cat <<EOF >"$HOME/.profile"
+# https://wiki.archlinux.org/title/Xinit#Autostart_X_at_login
+# https://unix.stackexchange.com/a/521049
+# apparently, .bash_profile is tried by default, while .profile is totally ignored
+
+cat <<EOF >"$HOME/.bash_profile"
 if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
 	exec startx
 fi
