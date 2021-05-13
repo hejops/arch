@@ -145,4 +145,10 @@ echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
 EOF
 
-echo "Setup complete; reboot into the new system"
+cat << EOF 
+Setup complete.
+Reboot into the new system, then clone the repo for post-installation
+EOF
+
+sleep 5
+reboot now
