@@ -3,8 +3,6 @@ set -eu
 
 [ "$(whoami)" != joseph ] && exit
 
-# installs a bare minimum graphical environment after a successful install
-
 systemctl status NetworkManager.service | grep running || {
 	systemctl start NetworkManager.service
 	systemctl enable NetworkManager.service
@@ -19,7 +17,6 @@ curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=
 sudo pacman -Syu
 
 # https://www.davidtsadler.com/posts/installing-st-dmenu-and-dwm-in-arch-linux/
-# could probably echo \n twice here...
 sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger firefox
 
 cd
