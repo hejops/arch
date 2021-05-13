@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
+[ "$(pwd)" != /root ] && exit
+
 # hostname does not work when chrooted
 
 # https://unix.stackexchange.com/a/14346
@@ -26,9 +28,10 @@ echo "LANG=en_US.UTF-8" >/etc/locale.conf
 # LC_TELEPHONE=en_GB.UTF-8
 # LC_TIME=en_GB.UTF-8
 
-HOSTNAME=joseph
+echo "Hostname:"
+read -r HOSTNAME < /dev/tty
 
-echo $HOSTNAME >/etc/hostname
+echo "$HOSTNAME" >/etc/hostname
 
 # localdomain has been omitted
 cat <<EOF >/etc/hosts
@@ -61,6 +64,7 @@ mkdir -p /boot/syslinux
 # omitting the copy gives menu-less boot
 cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
 extlinux --install /boot/syslinux
+sed -i -r 's|sda3|sda1|' /boot/syslinx/syslinux.cfg
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
 
 echo "Setup complete. Exit from chroot, then reboot the system"
