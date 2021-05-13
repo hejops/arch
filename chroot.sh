@@ -47,6 +47,11 @@ passwd
 
 pacman -S grub
 
+grub-install --target=i386-pc /dev/sda
+
+# mkdir -p /boot/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+
 exit
 
 # umount -R /mnt
