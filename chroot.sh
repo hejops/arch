@@ -1,7 +1,10 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
-# [ "$(hostname)" != root ] && exit
+# hostname does not work when chrooted
+
+# https://unix.stackexchange.com/a/14346
+# [ "$(awk '$5=="/" {print $1}' </proc/1/mountinfo)" != "$(awk '$5=="/" {print $1}' </proc/$$/mountinfo)" ]
 
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
@@ -45,14 +48,22 @@ passwd
 # systemctl start NetworkManager.service
 # systemctl enable NetworkManager.service
 
-pacman -S grub
+# https://unix.stackexchange.com/a/329954
+# produces warning:
+# warning: File system `ext2' doesn't support embedding.
+# but this can be ignored, allegedly
 
-grub-install --target=i386-pc /dev/sda
+# # --recheck
+# grub-install /dev/sda #|| :
+# grub-mkconfig -o /boot/grub/grub.cfg
 
-# mkdir -p /boot/grub
-grub-mkconfig -o /boot/grub/grub.cfg
+mkdir -p /boot/syslinux
+# omitting the copy gives menu-less boot
+cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
+extlinux --install /boot/syslinux
+dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
 
-exit
+echo "Setup complete. Exit from chroot, then reboot the system"
 
 # umount -R /mnt
 # echo "Rebooting in 5 seconds..."
