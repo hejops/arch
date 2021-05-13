@@ -26,9 +26,10 @@ CHECK() {
 DEV=/dev/sda
 
 # https://serverfault.com/a/250845
-lsblk
-CHECK "All data on $DEV will be irreversibly erased. This cannot be undone."
-dd if=/dev/zero of=/dev/sda bs=512 count=1 conv=notrunc
+lsblk | grep sda1 && {
+	CHECK "All data on $DEV will be irreversibly erased. This cannot be undone."
+	dd if=/dev/zero of=/dev/sda bs=512 count=1 conv=notrunc
+}
 
 # ls /usr/share/kbd/keymaps/**/*.map.gz
 # loadkeys LAYOUT
@@ -149,10 +150,15 @@ echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
 EOF
 
+# systemctl status NetworkManager.service | grep running || {
+# 	systemctl start NetworkManager.service
+# 	systemctl enable NetworkManager.service
+# }
+
 cat << EOF 
 Setup complete.
 Reboot into the new system, then clone the repo for post-installation
 EOF
 
-sleep 5
-reboot now
+# sleep 5
+# reboot now
