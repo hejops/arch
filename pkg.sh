@@ -2,30 +2,12 @@
 # bash is required for arrays
 set -euo pipefail
 
-# exit
-
-usage() {
-	cat <<EOF
-Usage: $(basename "$0") [options]
-
-EOF
-	exit
-}
-
-# [[ $# -eq 0 ]] && usage
-[[ ${1:-} = --help ]] && usage
-
-# TODO: determine package manager
 PKGMGR=pacman
 INSTALL="sudo pacman -S"
 QUERY="pacman -Ss"
 AURINSTALL="trizen --get"
 PIPINSTALL="pip3 install"
 
-# set mirror
-
-# all packages here are confirmed on pacman
-# ubuntu installs have lower priority, and user is expected to find missing packages themselves
 MAIN=(
 
 	ack
