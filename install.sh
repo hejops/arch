@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
+# https://wiki.archlinux.org/title/Installation_guide
 # set up partitions for use with chroot
 
 [ "$(hostname)" != archiso ] && exit
@@ -14,7 +15,13 @@ CHECK() {
 	unset ans
 }
 
-# https://wiki.archlinux.org/title/Installation_guide
+# lsblk | grep 'sd. ' | grep -v T | cut -d' ' -f1
+DEV=/dev/sda
+
+# https://serverfault.com/a/250845
+lsblk
+CHECK "All data on $DEV will be irreversibly erased. This cannot be undone."
+dd if=/dev/zero of=/dev/sda bs=512 count=1 conv=notrunc
 
 # ls /usr/share/kbd/keymaps/**/*.map.gz
 # loadkeys LAYOUT
@@ -41,7 +48,7 @@ until ping -c 1 archlinux.org; do iwctl; done
 
 timedatectl set-ntp true
 
-fdisk -l
+fdisk -l $DEV
 
 # typical windows scenario
 # sda1: 50 MB (HPFS/NTFS/exFAT)
@@ -60,9 +67,6 @@ RAM=$((RAM + 1))
 # https://wiki.archlinux.org/title/Partitioning#Partitioning_tools
 # https://gist.github.com/tuxfight3r/c640ab9d8eb3806a22b989581bcbed43
 # https://www.thegeekstuff.com/2017/05/sfdisk-examples/
-
-# lsblk | grep 'sd. ' | grep -v T | cut -d' ' -f1
-DEV=/dev/sda
 
 # TODO: MBR
 
