@@ -64,6 +64,8 @@ DEV=/dev/sda
 
 # TODO: MBR
 
+CHECK "Will create main partition and $RAM GB swap partition in $DEV"
+
 fdisk "$DEV" <<EOF
 n
 p
@@ -84,7 +86,7 @@ p
 w
 EOF
 
-lsblk
+# lsblk
 fdisk -l | grep "$DEV"
 CHECK "Wrote partition table"
 
@@ -96,13 +98,13 @@ swapon "${DEV}2"
 
 reflector
 
-pacstrap /mnt base linux linux-firmware vim git networkmanager syslinux
+pacstrap /mnt base linux linux-firmware vi vim git networkmanager syslinux sudo
 
 grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
 
 cat <<EOF
 Pre-chroot setup complete
-After chroot, run
+In chroot, run
 	git clone https://github.com/hejops/arch
 	cd arch
 	sh chroot.sh
