@@ -5,7 +5,6 @@ set -eu
 
 # installs a bare minimum graphical environment after a successful install
 
-# TODO: the service should be enabled from archiso
 systemctl status NetworkManager.service | grep running || {
 	systemctl start NetworkManager.service
 	systemctl enable NetworkManager.service
@@ -21,7 +20,7 @@ sudo pacman -Syu
 
 # https://www.davidtsadler.com/posts/installing-st-dmenu-and-dwm-in-arch-linux/
 # could probably echo \n twice here...
-sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger
+sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger firefox
 
 cd
 git clone https://github.com/hejops/dwm
@@ -35,13 +34,15 @@ echo dwm >"$HOME/.xinitrc"
 # https://unix.stackexchange.com/a/521049
 # apparently, .bash_profile is tried by default, while .profile is totally ignored
 
-cat <<EOF >"$HOME/.bash_profile"
+cat <<'EOF' >"$HOME/.bash_profile"
 if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
 	exec startx
 fi
 EOF
 
 cat <<EOF
-Installed dwm
+Successfully configured dwm
 dwm will be started automatically after logging back in
 EOF
+
+# pkill bash
