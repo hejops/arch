@@ -15,7 +15,8 @@ exit
 # [[ $# -eq 0 ]] && usage
 [[ ${1:-} = --help ]] && usage
 
-# determine package manager
+# TODO: determine package manager
+PKGMGR=pacman
 INSTALL="sudo pacman -S"
 QUERY="pacman -Ss"
 AURINSTALL="trizen --get"
@@ -34,14 +35,11 @@ feh
 ffmpeg
 firefox
 flameshot
-font-manager
 fzf
 gnupg
 groff
-hexdump
 htop
 i3lock
-latexmk
 libnotify
 maim
 make
@@ -68,15 +66,8 @@ shellcheck
 shfmt
 socat
 telegram-desktop
-texlive-base
-texlive-bibtex-extra
 texlive-bin
-texlive-binaries
 texlive-core
-texlive-latex-base
-texlive-latex-recommended
-texlive-latex-recommended
-texlive-publishers
 trizen
 udiskie
 udisks2
@@ -97,22 +88,26 @@ zathura-ps
 # no diplay manager: .xinitrc (exec dwm)
 # try out on new thinkpad
 
-if [[ $PACMAN = pacman ]]; then
-	$INSTALL "${MAIN[@]}"
-else
-	FOUND=()
-	for pkg in "${MAIN[@]}"; do
-		if $QUERY "^$pkg$"; then
-			FOUND+=("$pkg")	# MAIN-= is not allowed
-		else
-			echo "$pkg" >> packages_notfound
-		fi
-	done
-	echo "${FOUND[@]}"
-	exit
-	$INSTALL "${FOUND[@]}"
-fi
-# for each line in packages_notfound, suggest an alternative
+sudo pacman -Syu
+$INSTALL "${MAIN[@]}"
+
+# if [[ $PKGMGR = pacman ]]; then
+# 	:
+# else
+# 	FOUND=()
+# 	# this is quite inefficient...
+# 	for pkg in "${MAIN[@]}"; do
+# 		if $QUERY "^$pkg$"; then
+# 			FOUND+=("$pkg")	# MAIN-= is not allowed
+# 		else
+# 			echo "$pkg" >> packages_notfound
+# 		fi
+# 	done
+# 	echo "${FOUND[@]}"
+# 	exit
+# 	$INSTALL "${FOUND[@]}"
+# fi
+# # for each line in packages_notfound, suggest an alternative
 
 exit
 
@@ -140,6 +135,7 @@ gruvbox-dark-gtk
 htop-vim
 lowdown
 playitslowly
+font-manager
 tllocalmgr-git
 urxvt-perls
 
@@ -194,5 +190,5 @@ xdg-mime default org.pwmt.zathura.desktop application/pdf
 xdg-mime default ranger.desktop inode/directory
 xdg-mime default vim.desktop text/plain + https://unix.stackexchange.com/a/231302
 
-echo "The following packages were not found on $PACMAN. Please resolve them yourself."
+echo "The following packages were not found on $PKGMGR. Please resolve them yourself."
 cat packages_notfound
