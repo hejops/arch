@@ -5,10 +5,12 @@ sh install.sh
 
 1. install.sh
 
-- partitions, locale, bootloader, users
+- partitions
   - single root partition
   - swap partition, size equivalent to RAM
-  - syslinux (BIOS/MBR)
+- locale, timezone
+- bootloader: syslinux (BIOS/MBR)
+- users
 
 2. post.sh
 
