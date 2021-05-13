@@ -107,6 +107,8 @@ grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
 echo "Hostname:"
 read -r HOSTNAME </dev/tty
 
+USER=joseph
+
 cat <<EOF | arch-chroot /mnt
 set -eu #o pipefail
 
@@ -132,10 +134,8 @@ passwd < /dev/tty
 mkdir -p /boot/syslinux
 cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
 extlinux --install /boot/syslinux
-sed -i -r 's|sda3|sda1|' /boot/syslinx/syslinux.cfg
+sed -i -r 's|sda3|sda1|' /boot/syslinux/syslinux.cfg
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
-
-USER=joseph
 
 useradd -m $USER
 passwd $USER < /dev/tty
