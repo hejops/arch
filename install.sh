@@ -1,14 +1,11 @@
 #!/usr/bin/env sh
 set -eu #o pipefail
 
-# https://wiki.archlinux.org/title/Installation_guide
-# set up partitions for use with chroot
-
-# https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
-# iwctl --passphrase PASSWORD station wlan0 connect NETWORKNAME
-
 [ "$(hostname)" != archiso ] && exit
 
+# https://wiki.archlinux.org/title/Installation_guide
+
+# https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
 ip link
 ping -c 1 archlinux.org > /dev/null
 echo "Network OK"
@@ -148,17 +145,15 @@ usermod -G wheel $USER
 
 echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
-EOF
 
-# systemctl status NetworkManager.service | grep running || {
-# 	systemctl start NetworkManager.service
-# 	systemctl enable NetworkManager.service
-# }
+cd /home/joseph
+git clone https://github.com/hejops/arch
+EOF
 
 cat << EOF 
 Setup complete.
-Reboot into the new system, then clone the repo for post-installation
+After rebooting into the new system, proceed with post-installation
 EOF
 
-# sleep 5
-# reboot now
+sleep 5
+reboot now
