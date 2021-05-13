@@ -1,3 +1,8 @@
+(if not on ethernet)
+iwctl --passphrase PASSWORD station wlan0 connect NETWORKNAME
+curl -JLO https://raw.githubusercontent.com/hejops/arch/master/install.sh
+sh install.sh
+
 1. install.sh
 
 - partitions, locale, bootloader, users
