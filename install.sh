@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -eu #o pipefail
+set -eu
 
 [ "$(hostname)" != archiso ] && exit
 
@@ -7,7 +7,7 @@ set -eu #o pipefail
 
 # https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
 ip link
-ping -c 1 archlinux.org > /dev/null
+ping -c 1 archlinux.org >/dev/null
 echo "Network OK"
 
 CHECK() {
@@ -24,7 +24,7 @@ DEV=/dev/sda
 
 # https://serverfault.com/a/250845
 lsblk | grep sda1 && {
-	CHECK "All data on $DEV will be irreversibly erased. This cannot be undone."
+	CHECK "Disk $DEV is not empty. All data on it will be irreversibly erased before proceeding. This cannot be undone."
 	dd if=/dev/zero of=/dev/sda bs=512 count=1 conv=notrunc
 }
 
@@ -66,8 +66,6 @@ RAM=$((RAM + 1))
 # https://gist.github.com/tuxfight3r/c640ab9d8eb3806a22b989581bcbed43
 # https://www.thegeekstuff.com/2017/05/sfdisk-examples/
 
-# TODO: MBR
-
 CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
 fdisk "$DEV" <<EOF
@@ -96,12 +94,10 @@ CHECK "Wrote partition table"
 
 mkfs.ext4 "${DEV}1"
 mkswap "${DEV}2"
-
 mount "${DEV}1" /mnt
 swapon "${DEV}2"
 
 reflector
-
 pacstrap /mnt base linux linux-firmware vi vim git networkmanager syslinux sudo
 
 grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
@@ -112,9 +108,11 @@ read -r HOSTNAME </dev/tty
 USER=joseph
 
 cat <<EOF | arch-chroot /mnt
-set -eu #o pipefail
+set -eu
 
 [ "$(pwd)" != /root ] && exit
+
+echo "Setting up locale..."
 
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
@@ -131,13 +129,19 @@ echo "127.0.1.1  $HOSTNAME" >> /etc/hosts
 
 mkinitcpio -P
 
+echo "Creating root password..."
+
 passwd < /dev/tty
+
+echo "Setting up syslinux bootloader..."
 
 mkdir -p /boot/syslinux
 cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
 extlinux --install /boot/syslinux
 sed -i -r 's|sda3|sda1|' /boot/syslinux/syslinux.cfg
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
+
+echo "Creating user: $USER"
 
 useradd -m $USER
 passwd $USER < /dev/tty
@@ -146,14 +150,28 @@ usermod -G wheel $USER
 echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
 
+echo "Cloning install scripts..."
+
 cd /home/joseph
 git clone https://github.com/hejops/arch
 EOF
 
-cat << EOF 
+cat <<EOF
 Setup complete.
-After rebooting into the new system, proceed with post-installation
+
+Partitions:
+$(fdisk -l | grep "$DEV")
+
+Bootloader:
+$(cat /mnt/boot/syslinux/syslinux.cfg)
+
+fstab:
+$(cat /mnt/etc/fstab)
+
+Home:
+$(ls /mnt/home/$USER)
 EOF
 
-sleep 5
+CHECK "The system will now be rebooted."
+
 reboot now
