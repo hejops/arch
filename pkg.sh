@@ -72,6 +72,35 @@ MAIN=(
 
 )
 
+# TODO: chown arch
+
+asoundconf list
+# HDMI is usually not what we want
+asoundconf set-default-card PCH
+amixer sset Master unmute
+echo "Testing sound..."
+speaker-test -c 2 -D plughw:1
+
+# sudo pacman -Sy --needed base-devel git
+git clone https://aur.archlinux.org/trizen.git
+cd trizen
+sudo makepkg -si
+cd
+
+fix_pacman_keys() {
+	# https://bbs.archlinux.org/viewtopic.php?pid=1984300#p1984300
+	# enable ntp and ensure the time correct
+	sudo timedatectl set-ntp 1
+	timedatectl status
+
+	# create pacman master key, reload keys from keyring resources
+	sudo rm -fr /etc/pacman.d/gnupg
+	sudo pacman-key --init
+	sudo pacman-key --populate
+}
+
+fix_pacman_keys
+
 sudo pacman -Syu
 $INSTALL "${MAIN[@]}"
 
