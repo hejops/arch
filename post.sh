@@ -1,18 +1,23 @@
 #!/usr/bin/env sh
 set -eu
 
-[ "$(whoami)" != joseph ] && exit
+if [ "$(whoami)" = root ]; then
+	echo "This script is not to be run as root!"
+	exit
+fi
 
 systemctl status NetworkManager.service | grep running || {
-	systemctl start NetworkManager.service
-	systemctl enable NetworkManager.service
+	sudo systemctl start NetworkManager.service
+	sudo systemctl enable NetworkManager.service
 }
 
 ping -c 1 archlinux.org || nmtui
 
 # replace the mirrors from reflector since they're not very good
 
-curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" | sed -r 's|^#Server|Server|' | sudo tee /etc/pacman.d/mirrorlist
+curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
+	sed -r 's|^#Server|Server|' |
+	sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu
 
