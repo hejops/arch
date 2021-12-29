@@ -25,7 +25,10 @@ cd dwm
 make clean
 sudo make install
 
-echo dwm >"$HOME/.xinitrc"
+cat <<EOF >"$HOME/.xinitrc"
+xrdb -merge ~/.Xresources
+dwm
+EOF
 
 # https://wiki.archlinux.org/title/Xinit#Autostart_X_at_login
 # https://unix.stackexchange.com/a/521049
