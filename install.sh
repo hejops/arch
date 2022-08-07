@@ -4,6 +4,7 @@ set -eu
 [ "$(hostname)" != archiso ] && exit
 
 # https://wiki.archlinux.org/title/Installation_guide
+# https://github.com/wincent/wincent/blob/master/contrib/arch-linux/arch-linux-install.sh
 
 # https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
 ip link

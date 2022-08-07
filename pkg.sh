@@ -10,7 +10,11 @@ PIPINSTALL="pip3 install"
 
 MAIN=(
 
+	# TODO: trizen
 	ack
+	acpi
+	asoundconf
+	at
 	cronie
 	curl
 	dash
@@ -41,12 +45,19 @@ MAIN=(
 	nodejs
 	notmuch
 	npm
+	ntfs-3g
+	pacman-contrib # checkupdates
 	pavucontrol
 	pcre
+	pdftk
 	picom
 	python-pdftotext
+	python-pip
 	python3
+	qjackctl
+	qsynth
 	ranger
+	realtime-privileges
 	recode
 	rofi
 	rsync
@@ -54,22 +65,25 @@ MAIN=(
 	shellcheck
 	shfmt
 	socat
+	stylua
+	sysstat # mpstat
+	system-config-printer
 	telegram-desktop
 	texlive-bin
 	texlive-core
-	trizen
 	udiskie
 	udisks2
+	usbutils # lsusb
 	vim
 	xdg-utils
 	xorg-xbacklight
 	xorg-xinit
 	xorg-xrandr
+	xorg-xsetroot
 	xournalpp
 	youtube-dl
 	zathura-pdf-mupdf
 	zathura-ps
-
 )
 
 # TODO: chown arch
@@ -104,12 +118,17 @@ fix_pacman_keys
 sudo pacman -Syu
 $INSTALL "${MAIN[@]}"
 
-[[ -f "$HOME/.git-credentials" ]] || {
+if ! [[ -f "$HOME/.git-credentials" ]]; then
 	git config --global credential.helper store
-	xdg-open "https://github.com/settings/tokens/new"
-	read -r -p "PAT: " PAT </dev/tty
-	echo "https://hejops:$PAT@github.com" | tr -d ' ' | tee "$HOME/.git-credentials"
-}
+	echo "Setting up Github PAT..."
+	xdg-open "https://github.com/settings/tokens/new" > /dev/null
+	read -r -p "PAT: " PAT < /dev/tty
+	echo "https://hejops:$PAT@github.com" |
+		tr -d ' ' |
+		tee "$HOME/.git-credentials"
+fi
+
+# get dotfiles and scripts
 
 cd
 git clone https://github.com/hejops/dotfiles
@@ -117,13 +136,47 @@ rm -rf "$HOME/.mozilla"
 rsync -vua dotfiles/ .
 xrdb -merge .Xresources
 
+cd
+git clone https://github.com/hejops/scripts
+bash scripts/links ~/scripts
+
+# setup MIDI
+
+sudo usermod -a -G audio joseph
+sudo usermod -a -G realtime joseph
+pip install gdown
+gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9eix9ed2WNjXiTRc5yu7ipL"
+# TODO: move sf2 to somewhere
+# TODO: set PCH? device in Qjackctl.conf
+# TODO: set soundfont in Qsynth.conf
+
+# crontab ~/.cron
+# crontab -l
+
+# fix speaker hum?
+# https://unix.stackexchange.com/a/513491
+# comment out suspend-on-idle in
+# /etc/pulse/system.pa
+# /etc/pulse/default.pa
+# didn't work
+#
+
+# https://wiki.archlinux.org/title/TrackPoint#udev_rule
+# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
+# not persistent:
+# echo 255 | sudo tee /sys/devices/platform/i8042/serio1/serio2/speed
+# echo 180 | sudo tee /sys/devices/platform/i8042/serio1/serio2/sensitivity
+
+cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
+ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
+EOF
+
 exit
 
 SERVICES=(
 
 	mbsync
 	mpd
-
 )
 
 systemctl enable
@@ -135,15 +188,18 @@ systemctl start --user mbsync.timer
 
 AUR=(
 
-	discord-ptb
+	# discord-ptb
 	font-manager
 	gruvbox-dark-gtk
 	htop-vim
+	lf-bin
 	lowdown
+	nsxiv # nsxiv-extra
 	playitslowly
+	scrobbler # https://github.com/hauzer/scrobbler#examples
+	texlive-latexindent-meta
 	tllocalmgr-git
 	urxvt-perls
-
 )
 
 $AURINSTALL
@@ -166,9 +222,10 @@ jupyter nbextension enable --py jupytext --user
 
 # set up credentials
 GIT=(
-	dwm
-	dotfiles
-	scripts
+	hejops/dwm
+	hejops/dotfiles
+	hejops/scripts
+	# nsxiv/nsxiv	# muennich/sxiv discontinued
 )
 
 # mv dotfiles up
@@ -187,13 +244,27 @@ xdg-open https://github.com/hejops/dotfiles/raw/master/.mozilla/firefox/4clnophl
 
 cp /usr/share/applications/ranger.desktop "$HOME/.local/share/applications"
 
-# fonts are set in: .Xresources, firefox, rofi, dwm, .config/gtk-3.0/settings.ini
-# set xdgs -- ~/.config/mimeapps.list
-https://github.com/mwh/dragon
-set xdgs:
-xdg-mime default org.pwmt.zathura.desktop application/pdf
-xdg-mime default ranger.desktop inode/directory
-xdg-mime default vim.desktop text/plain + https://unix.stackexchange.com/a/231302
+setup_xdg_mime() {
+	# fonts are set in: .Xresources, firefox, rofi, dwm, .config/gtk-3.0/settings.ini
+	# set xdgs -- ~/.config/mimeapps.list
+	# https://github.com/mwh/dragon
 
-echo "The following packages were not found on $PKGMGR. Please resolve them yourself."
-cat packages_notfound
+	xdg-mime default org.pwmt.zathura.desktop application/pdf
+	xdg-mime default ranger.desktop inode/directory
+	xdg-mime default vim.desktop text/plain + https://unix.stackexchange.com/a/231302
+}
+
+setup_printer() {
+	# GUI
+	system-config-printer
+	sudo cat /etc/cups/printers.conf
+}
+
+setup_autologin() {
+	# https://wiki.archlinux.org/title/getty#Virtual_console
+	cat << EOF | sudo tee /etc/systemd/system/getty@tty1.service.d/override.conf
+	[Service]
+	ExecStart=
+	ExecStart=-/usr/bin/agetty --autologin joseph --noclear %I $TERM
+EOF
+}

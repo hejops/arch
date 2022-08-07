@@ -2,6 +2,7 @@
 iwctl --passphrase PASSWORD station wlan0 connect NETWORKNAME
 curl -JLO https://raw.githubusercontent.com/hejops/arch/master/install.sh
 sh install.sh
+or: curl -JL https://git.io/JGb0y | sh
 
 1. install.sh
 
@@ -10,7 +11,7 @@ sh install.sh
   - swap partition, size equivalent to RAM
 - locale, timezone
 - bootloader: syslinux (BIOS/MBR)
-- users
+- hostname, single user
 
 2. post.sh
 
@@ -26,6 +27,3 @@ sh install.sh
 - core packages
 - dotfiles
 - scripts
-
-4. optional
-
