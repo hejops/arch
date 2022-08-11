@@ -1,0 +1,17 @@
+# discord-ptb
+# font-manager
+# texlive-latexindent-meta
+# tllocalmgr-git
+# urxvt-perls # possibly unnecessary?
+dragon-drop
+gruvbox-dark-gtk
+htop-vim
+id3
+lf-bin
+nsxiv # nsxiv-extra
+playitslowly
+scrobbler # https://github.com/hauzer/scrobbler#examples
+shntool
+simple-mtpfs
+taptempo
+teams-for-linux
