@@ -3,14 +3,11 @@
 # bash is required for arrays
 set -euo pipefail
 
-# QUERY="pacman -Ss"
-AURINSTALL="trizen --get"
-PIPINSTALL="pip3 install"
-PKGMGR=pacman
-
-if stat ~/arch | grep -q 'Uid: (    0/    root)'; then
+if stat ~/arch | grep -Fq 'Uid: (    0/    root)'; then
 	sudo chown -R joseph ~/arch
 fi
+
+# TODO: allow shutdown/reboot without sudo
 
 fix_pacman_keys() {
 	# TODO check first
@@ -47,12 +44,13 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 	cd
 	git clone https://github.com/hejops/dotfiles
 	rm -rf "$HOME/.mozilla"
-	rsync -vua dotfiles/ .
-	xrdb -merge .Xresources
+	rsync -vua ~/dotfiles/ .
+	rm -r ~/dotfiles
+	xrdb -merge ~/.Xresources
 
 	cd
 	git clone https://github.com/hejops/scripts
-	bash scripts/links ~/scripts
+	bash ~/scripts/links ~/scripts
 
 fi
 
@@ -124,6 +122,7 @@ setup_ff() {
 # echo "Testing sound..."
 # speaker-test -c 2 -D plughw:1
 
+# can probably be done in install
 sudo usermod -a -G audio joseph
 sudo usermod -a -G realtime joseph
 
