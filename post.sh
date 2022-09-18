@@ -31,6 +31,7 @@ make clean
 sudo make install
 
 cat << EOF > "$HOME/.xinitrc"
+export PATH=\$PATH:\$HOME/.local/bin
 xrdb -merge ~/.Xresources
 dwm
 EOF
