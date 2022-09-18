@@ -1,107 +1,19 @@
 #!/usr/bin/env bash
+# intended to be run on a system with most of the basics
 # bash is required for arrays
 set -euo pipefail
 
-PKGMGR=pacman
-INSTALL="sudo pacman -S"
-QUERY="pacman -Ss"
+# QUERY="pacman -Ss"
 AURINSTALL="trizen --get"
 PIPINSTALL="pip3 install"
+PKGMGR=pacman
 
-MAIN=(
-
-	# TODO: trizen
-	ack
-	acpi
-	asoundconf
-	at
-	cronie
-	curl
-	dash
-	exa
-	feh
-	ffmpeg
-	firefox
-	flameshot
-	fzf
-	gnupg
-	groff
-	htop
-	hunspell
-	i3lock
-	inetutils
-	isync
-	libnotify
-	maim
-	make
-	man
-	moreutils
-	mpc
-	mpd
-	mpv
-	ncmpcpp
-	neomutt
-	newsboat
-	nodejs
-	notmuch
-	npm
-	ntfs-3g
-	pacman-contrib # checkupdates
-	pavucontrol
-	pcre
-	pdftk
-	picom
-	python-pdftotext
-	python-pip
-	python3
-	qjackctl
-	qsynth
-	ranger
-	realtime-privileges
-	recode
-	rofi
-	rsync
-	rxvt-unicode
-	shellcheck
-	shfmt
-	socat
-	stylua
-	sysstat # mpstat
-	system-config-printer
-	telegram-desktop
-	texlive-bin
-	texlive-core
-	udiskie
-	udisks2
-	usbutils # lsusb
-	vim
-	xdg-utils
-	xorg-xbacklight
-	xorg-xinit
-	xorg-xrandr
-	xorg-xsetroot
-	xournalpp
-	youtube-dl
-	zathura-pdf-mupdf
-	zathura-ps
-)
-
-# TODO: chown arch
-
-asoundconf list
-# HDMI is usually not what we want
-asoundconf set-default-card PCH
-amixer sset Master unmute
-echo "Testing sound..."
-speaker-test -c 2 -D plughw:1
-
-# sudo pacman -Sy --needed base-devel git
-git clone https://aur.archlinux.org/trizen.git
-cd trizen
-sudo makepkg -si
-cd
+if stat ~/arch | grep -q 'Uid: (    0/    root)'; then
+	sudo chown -R joseph ~/arch
+fi
 
 fix_pacman_keys() {
+	# TODO check first
 	# https://bbs.archlinux.org/viewtopic.php?pid=1984300#p1984300
 	# enable ntp and ensure the time correct
 	sudo timedatectl set-ntp 1
@@ -113,10 +25,13 @@ fix_pacman_keys() {
 	sudo pacman-key --populate
 }
 
-fix_pacman_keys
+# fix_pacman_keys
 
 sudo pacman -Syu
-$INSTALL "${MAIN[@]}"
+
+MAIN=$(grep < ./packages.txt -Po '^[^# ]+' | xargs)
+
+sudo pacman -S --needed "${MAIN[@]}"
 
 if ! [[ -f "$HOME/.git-credentials" ]]; then
 	git config --global credential.helper store
@@ -126,32 +41,91 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 	echo "https://hejops:$PAT@github.com" |
 		tr -d ' ' |
 		tee "$HOME/.git-credentials"
+
+	# get dotfiles and scripts
+
+	cd
+	git clone https://github.com/hejops/dotfiles
+	rm -rf "$HOME/.mozilla"
+	rsync -vua dotfiles/ .
+	xrdb -merge .Xresources
+
+	cd
+	git clone https://github.com/hejops/scripts
+	bash scripts/links ~/scripts
+
 fi
 
-# get dotfiles and scripts
+mkdir -p ~/wallpaper
 
-cd
-git clone https://github.com/hejops/dotfiles
-rm -rf "$HOME/.mozilla"
-rsync -vua dotfiles/ .
-xrdb -merge .Xresources
+# when connected to monitor (x230), behaves like ignore anyway?
+# x240 behaves like it should
 
-cd
-git clone https://github.com/hejops/scripts
-bash scripts/links ~/scripts
+# cat /etc/systemd/logind.conf |
+# 	sed 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
+# 	sudo tee /etc/systemd/logind.conf
 
-# setup MIDI
+systemctl enable cronie
+systemctl start cronie
+crontab ~/.cron
+crontab -l
+
+# TODO urxvt addons? "local" workarounds?
+
+setup_mail() {
+
+	systemctl enable --user mbsync.timer
+	systemctl start --user mbsync.timer
+
+	grep < .mbsyncrc -v '#' | grep -Po '\.mail.+' | xargs mkdir -p
+	mkdir -p ~/.passwd
+
+	# notmuch new
+
+	# TODO: regenerate gmail app password ~/.passwd/gmail.txt
+	# firefox https://myaccount.google.com/apppasswords
+
+	# mbsync -Va #&
+	# mailtag
+}
+
+setup_mail
+
+setup_ff() {
+
+	if ! find .mozilla -name 'tridactyl.json' | grep .; then
+		curl \
+			-fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh \
+			-o /tmp/trinativeinstall.sh &&
+			sh /tmp/trinativeinstall.sh 1.22.1
+		# TODO: tridactyl :source
+	fi
+
+	jq < ~/.mozilla/firefox/4clnophl.default/extensions.json -r .addons[].sourceURI |
+		grep xpi$ |
+		xargs -n1 firefox
+
+	# TODO: cookies.sqlite -- block cookies to avoid youtube consent screen
+	# INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);
+
+}
+
+# setup hardware (audio, mouse, MIDI, etc) {{{
+
+# pulseaudio -D -- dwm startup?
+
+# TODO: if USB speaker, raise volume to 90
+# amixer set Master 90%
+
+# asoundconf list
+# HDMI is usually not what we want
+# asoundconf set-default-card PCH
+# amixer sset Master unmute
+# echo "Testing sound..."
+# speaker-test -c 2 -D plughw:1
 
 sudo usermod -a -G audio joseph
 sudo usermod -a -G realtime joseph
-pip install gdown
-gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9eix9ed2WNjXiTRc5yu7ipL"
-# TODO: move sf2 to somewhere
-# TODO: set PCH? device in Qjackctl.conf
-# TODO: set soundfont in Qsynth.conf
-
-# crontab ~/.cron
-# crontab -l
 
 # fix speaker hum?
 # https://unix.stackexchange.com/a/513491
@@ -159,7 +133,6 @@ gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9ei
 # /etc/pulse/system.pa
 # /etc/pulse/default.pa
 # didn't work
-#
 
 # https://wiki.archlinux.org/title/TrackPoint#udev_rule
 # https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
@@ -170,88 +143,91 @@ gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9ei
 cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
+#}}}
 
-exit
+# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+# sh Anaconda3-2022.05-Linux-x86_64.sh
+# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
+# conda init
 
-SERVICES=(
+if [ ! -x trizen ]; then
+	# sudo pacman -Sy --needed base-devel git
+	git clone https://aur.archlinux.org/trizen.git
+	cd trizen
+	makepkg -si # NOT sudo
+	cd
+	rm -r trizen
+fi
 
-	mbsync
-	mpd
-)
+AUR=$(grep < ./aur.txt -v '#' | xargs)
+# TODO: no prompt?
+trizen -S --needed "${AUR[@]}"
 
-systemctl enable
-systemctl start
+if ! scrobbler list-users | grep hejops; then
+	scrobber add-user hejops
+fi
 
-systemctl enable --user mbsync.timer
-systemctl start --user mbsync.timer
-# systemctl status
+# TODO: regenerate ~/.config/mpv/queue
 
-AUR=(
+echo "Setup complete!"
+exit 0
 
-	# discord-ptb
-	font-manager
-	gruvbox-dark-gtk
-	htop-vim
-	lf-bin
-	lowdown
-	nsxiv # nsxiv-extra
-	playitslowly
-	scrobbler # https://github.com/hauzer/scrobbler#examples
-	texlive-latexindent-meta
-	tllocalmgr-git
-	urxvt-perls
-)
+# sudo mkdir /usr/share/soundfonts
+# sudo ln -s "/run/media/joseph/My Passport/files/gp/sf2/Chorium.sf2" /usr/share/soundfonts/default.sf2
+#
+# wildmidi requires /etc/wildmidi/wildmidi.cfg
 
-$AURINSTALL
+# misc
+# https://github.com/Aethlas/fflz4
 
 # installed to .local/bin by default; this is included in $PATH
 PIPS=(
 
-	biopython
+	# biopython
+	# cget https://github.com/jaseg/python-mpv/raw/main/mpv.py
+	# modlamp
+	# rope
+	# vim-vint
+	black
+	gdown
 	jupytext
 	lastpy
-	modlamp
-	rope
-	vim-vint
+	pandas
+	python-mpv # TODO: import fails, better to curl from source directly
+	tabulate
 )
 
-$PIPINSTALL
+TEX=(
+
+	# biblatex	use packaged one; source version will produce conflict with biber
+	csquotes
+	logreq
+)
+
+# grep < scripts/*.py -Po '^(from|import) \w+' | awk '{print $2}' | sort -u | xargs -n1 pip install
+
+# gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9eix9ed2WNjXiTRc5yu7ipL"
+# TODO: move sf2 to somewhere
+# TODO: set PCH? device in Qjackctl.conf
+# TODO: set soundfont in Qsynth.conf
+
+pip install "${PIPS[@]}"
+
+exit
 
 jupyter nbextension install --py jupytext --user
 jupyter nbextension enable --py jupytext --user
-
-# set up credentials
-GIT=(
-	hejops/dwm
-	hejops/dotfiles
-	hejops/scripts
-	# nsxiv/nsxiv	# muennich/sxiv discontinued
-)
-
-# mv dotfiles up
-
-# create passwords for mail, lastfm
-mkpass "$HOME/.passwd/gmail.gpg"
-mkpass "$HOME/.passwd/lastfm.gpg"
-
-mbsync -Va #&
-# if HDD connected, start building mpd database & (takes a long time)
-
-unsf -- sudo make -f Makefile.linux install
-
-xdg-open https://github.com/hejops/dotfiles/raw/master/.mozilla/firefox/4clnophl.default/chrome/google.user.css
-# stylus only accepts urls, not files
-
-cp /usr/share/applications/ranger.desktop "$HOME/.local/share/applications"
 
 setup_xdg_mime() {
 	# fonts are set in: .Xresources, firefox, rofi, dwm, .config/gtk-3.0/settings.ini
 	# set xdgs -- ~/.config/mimeapps.list
 	# https://github.com/mwh/dragon
 
+	xdg-mime default firefox.desktop image/jpeg
+	xdg-mime default firefox.desktop image/png
 	xdg-mime default org.pwmt.zathura.desktop application/pdf
 	xdg-mime default ranger.desktop inode/directory
-	xdg-mime default vim.desktop text/plain + https://unix.stackexchange.com/a/231302
+	xdg-mime default vim.desktop text/plain # TODO: https://unix.stackexchange.com/a/231302
 }
 
 setup_printer() {
@@ -262,9 +238,13 @@ setup_printer() {
 
 setup_autologin() {
 	# https://wiki.archlinux.org/title/getty#Virtual_console
+	# should NOT be done on a machine that will be taken outdoors
 	cat << EOF | sudo tee /etc/systemd/system/getty@tty1.service.d/override.conf
 	[Service]
 	ExecStart=
 	ExecStart=-/usr/bin/agetty --autologin joseph --noclear %I $TERM
 EOF
 }
+
+# unsf -- sudo make -f Makefile.linux install
+# cp /usr/share/applications/ranger.desktop "$HOME/.local/share/applications"
