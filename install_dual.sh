@@ -17,6 +17,8 @@ set -eu
 
 # TODO: no need to fdisk if already partitioned ("No enough free sectors available")
 
+timedatectl set-ntp true
+
 DEV=/dev/nvme0n1
 mk_partition() {
 	# create linux partition only; no swap, no extra efi
@@ -30,6 +32,7 @@ w
 EOF
 }
 
+# TODO: assert only 1 of each
 EFI=$(fdisk -l | grep -m1 'EFI System' | awk '{print $1}')
 LINUX=$(fdisk -l | grep -m1 'Linux filesystem' | awk '{print $1}')
 
@@ -39,7 +42,7 @@ mount "$LINUX" /mnt
 reflector --country Germany # not that fast
 pacstrap /mnt base linux linux-firmware vi gvim git networkmanager sudo ntfs-3g
 
-# TODO: /boot instead of /efi? it "pre-exists" because windows makes it, so arch must go there too?
+# /boot already exists because windows makes it, so arch must be installed there too
 mkdir -p /mnt/boot
 mount "$EFI" /mnt/boot # mount existing efi partition
 
@@ -83,7 +86,7 @@ passwd $USER < /dev/tty
 echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
 
-pacman -S efibootmgr os-prober
+pacman -S --noconfirm efibootmgr os-prober
 bootctl install
 
 echo "Cloning install scripts..."
@@ -94,9 +97,10 @@ EOF
 
 exit 0
 
+# TODO: can probably be done before chroot?
 cat << EOF > /boot/loader/loader.conf
-default arch-*
-timeout 3
+default arch*
+timeout 5
 EOF
 
 # https://wiki.archlinux.org/title/systemd-boot#Manual_entry_using_efibootmgr
@@ -114,8 +118,6 @@ cat << EOF > /boot/loader/entries/arch.conf
 title Windows
 efi /EFI/Microsoft/Boot/bootmgfw.efi
 EOF
-
-# bootctl seems to create entry for windows automatically?
 
 CHECK "The system will now be rebooted."
 
