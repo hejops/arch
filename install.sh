@@ -2,7 +2,8 @@
 set -eu
 
 if ! fdisk; then
-	echo "Arch ISO possibly corrupt"
+	echo "Try a different USB port."
+	echo "If this error persists, arch ISO is possibly corrupt."
 	exit 1
 fi
 
