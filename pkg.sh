@@ -3,11 +3,7 @@
 # bash is required for arrays
 set -euo pipefail
 
-<<<<<<< HEAD
-if stat ~/arch | grep -q 'Uid: (    0/    root)'; then
-=======
 if stat ~/arch | grep -Fq 'Uid: (    0/    root)'; then
->>>>>>> edf34c6493af220b487d39ec15ba4239eb88d64f
 	sudo chown -R joseph ~/arch
 	# can also chgrp, but not necessary
 fi
@@ -59,12 +55,8 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 
 	cd
 	git clone https://github.com/hejops/scripts
-<<<<<<< HEAD
-	bash scripts/links ~/scripts
-	dwmstatus &
-=======
 	bash ~/scripts/links ~/scripts
->>>>>>> edf34c6493af220b487d39ec15ba4239eb88d64f
+	dwmstatus &
 
 fi
 
@@ -197,15 +189,9 @@ fi
 # echo "Testing sound..."
 # speaker-test -c 2 -D plughw:1
 
-<<<<<<< HEAD
 # can be done earlier
 # sudo usermod -a -G audio joseph
 # sudo usermod -a -G realtime joseph
-=======
-# can probably be done in install
-sudo usermod -a -G audio joseph
-sudo usermod -a -G realtime joseph
->>>>>>> edf34c6493af220b487d39ec15ba4239eb88d64f
 
 # fix speaker hum?
 # https://unix.stackexchange.com/a/513491

@@ -101,11 +101,7 @@ exit 0
 # TODO: can probably be done before chroot?
 cat << EOF > /boot/loader/loader.conf
 default arch*
-<<<<<<< HEAD
 timeout 5
-=======
-timeout 3
->>>>>>> edf34c6493af220b487d39ec15ba4239eb88d64f
 EOF
 
 # https://wiki.archlinux.org/title/systemd-boot#Manual_entry_using_efibootmgr
