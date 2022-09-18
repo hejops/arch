@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 
+if ! fdisk; then
+	echo "Arch ISO possibly corrupt"
+	exit 1
+fi
+
 [ "$(hostname)" != archiso ] && exit
 
 # https://wiki.archlinux.org/title/Installation_guide
