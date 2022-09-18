@@ -15,9 +15,9 @@ ping -c 1 archlinux.org || sudo nmtui
 
 # replace the mirrors from reflector since they're not very good
 
-curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
-	sed -r 's|^#Server|Server|' |
-	sudo tee /etc/pacman.d/mirrorlist
+# curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
+# 	sed -r 's|^#Server|Server|' |
+# 	sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu
 
@@ -30,7 +30,7 @@ cd dwm
 make clean
 sudo make install
 
-cat <<EOF >"$HOME/.xinitrc"
+cat << EOF > "$HOME/.xinitrc"
 xrdb -merge ~/.Xresources
 dwm
 EOF
@@ -38,14 +38,15 @@ EOF
 # https://wiki.archlinux.org/title/Xinit#Autostart_X_at_login
 # https://unix.stackexchange.com/a/521049
 # apparently, .bash_profile is tried by default, while .profile is totally ignored
+# why does this EOF have single quotes? i honestly forgot
 
-cat <<'EOF' >"$HOME/.bash_profile"
+cat << 'EOF' > "$HOME/.bash_profile"
 if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
 	exec startx
 fi
 EOF
 
-cat <<EOF
+cat << EOF
 Successfully configured dwm
 dwm will be started automatically after logging back in
 EOF
