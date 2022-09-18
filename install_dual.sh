@@ -67,6 +67,7 @@ echo "127.0.0.1  localhost" >> /etc/hosts
 echo "::1        localhost" >> /etc/hosts
 echo "127.0.1.1  $HOSTNAME" >> /etc/hosts
 
+pacman -S --noconfirm linux
 mkinitcpio -P
 
 echo "Creating root password..."
@@ -83,7 +84,7 @@ passwd $USER < /dev/tty
 echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
 
-pacman -S efibootmgr os-prober
+pacman -S --noconfirm efibootmgr os-prober
 bootctl install
 
 echo "Cloning install scripts..."
@@ -95,7 +96,7 @@ EOF
 exit 0
 
 cat << EOF > /boot/loader/loader.conf
-default arch-*
+default arch*
 timeout 3
 EOF
 
