@@ -8,14 +8,14 @@ set -eu
 
 # https://wiki.archlinux.org/title/Iwd#Connect_to_a_network
 ip link
-ping -c 1 archlinux.org >/dev/null
+ping -c 1 archlinux.org > /dev/null
 echo "Network OK"
 
 CHECK() {
 	# "local" is not POSIX-compliant
 	echo "$1"
 	echo "Proceed? [Y/n]"
-	read -r ans </dev/tty
+	read -r ans < /dev/tty
 	[ "$ans" = n ] && exit 1
 	unset ans
 }
@@ -37,15 +37,18 @@ lsblk | grep sda1 && {
 # this script uses MBR / BIOS
 # parted -l / ls /sys...
 
-if ls /sys/firmware/efi/efivars; then
-	MODE=UEFI
-	echo "UEFI mode"
-else
-	MODE=BIOS
-	echo "BIOS mode"
-fi
+# TODO: figure out steps for dual boot, put in a separate script
+# https://wiki.gentoo.org/wiki/UEFI_Dual_boot_with_Windows_7/8#Create_partitions
 
 timedatectl set-ntp true
+
+if ls /sys/firmware/efi/efivars; then
+	# MODE=UEFI
+	echo "UEFI mode"
+else
+	# MODE=BIOS
+	echo "BIOS mode"
+fi
 
 fdisk -l $DEV
 
@@ -69,7 +72,7 @@ RAM=$((RAM + 1))
 
 CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
-fdisk "$DEV" <<EOF
+fdisk "$DEV" << EOF
 n
 p
 1
@@ -99,16 +102,21 @@ mount "${DEV}1" /mnt
 swapon "${DEV}2"
 
 reflector
-pacstrap /mnt base linux linux-firmware vi vim git networkmanager syslinux sudo
 
-grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >>/mnt/etc/fstab
+# gvim has clipboard support (has('clipboard')), vim-minimal doesn't
+if ! pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo; then
+	echo "Newer Arch ISO required"
+	exit 1
+fi
+
+grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "Hostname:"
-read -r HOSTNAME </dev/tty
+read -r HOSTNAME < /dev/tty
 
 USER=joseph
 
-cat <<EOF | arch-chroot /mnt
+cat << EOF | arch-chroot /mnt
 set -eu
 
 [ "$(pwd)" != /root ] && exit
@@ -157,7 +165,7 @@ cd /home/joseph
 git clone https://github.com/hejops/arch
 EOF
 
-cat <<EOF
+cat << EOF
 Setup complete.
 
 Partitions:
