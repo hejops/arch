@@ -11,7 +11,7 @@ systemctl status NetworkManager.service | grep running || {
 	sudo systemctl enable NetworkManager.service
 }
 
-ping -c 1 archlinux.org || nmtui
+ping -c 1 archlinux.org || sudo nmtui
 
 # replace the mirrors from reflector since they're not very good
 
