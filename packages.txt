@@ -1,16 +1,26 @@
 # youtube-dl	# generally outdated compared to yt-dlp
+# mpc
+# mpd
+# ncmpcpp
+# noto-fonts-cjk	# quite large
+# xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
 ack
 acpi
+acpilight
+adobe-source-han-sans-cn-fonts
+adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
 alsa-utils
 at
 bash-language-server
+biber
 chromium
 clang
 cronie
 cuetools
 curl
 dash
+dos2unix
 dunst
 exa
 feh
@@ -38,13 +48,11 @@ lowdown
 maim
 make
 man
+mediainfo
 moreutils
 mp3info
-mpc
-mpd
 mpv
 musescore
-ncmpcpp
 neomutt
 newsboat
 nicotine+
@@ -58,6 +66,7 @@ pavucontrol
 pcre
 pdftk
 picom
+prettier
 pulseaudio
 pulseaudio-alsa
 python-pdftotext
@@ -89,7 +98,6 @@ upower
 usbutils # lsusb
 vim
 xdg-utils
-xorg-xbacklight
 xorg-xinit
 xorg-xrandr
 xorg-xsetroot
