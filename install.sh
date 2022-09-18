@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
-if ! fdisk; then
+if ! fdisk -l; then
 	echo "Try a different USB port."
-	echo "If this error persists, arch ISO is possibly corrupt."
+	echo "If this error persists, Arch ISO is possibly corrupt."
 	exit 1
 fi
 
@@ -43,10 +43,8 @@ lsblk | grep sda1 && {
 # this script uses MBR / BIOS
 # parted -l / ls /sys...
 
-# TODO: figure out steps for dual boot, put in a separate script
-# https://wiki.gentoo.org/wiki/UEFI_Dual_boot_with_Windows_7/8#Create_partitions
-
 timedatectl set-ntp true
+timedatectl status
 
 if ls /sys/firmware/efi/efivars; then
 	# MODE=UEFI
@@ -104,10 +102,14 @@ CHECK "Wrote partition table"
 
 mkfs.ext4 "${DEV}1"
 mkswap "${DEV}2"
-mount "${DEV}1" /mnt
 swapon "${DEV}2"
 
-reflector
+mount "${DEV}1" /mnt
+
+curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
+	sed -r 's|^#Server|Server|' > /mnt/etc/pacman.d/mirrorlist
+
+# reflector
 
 # gvim has clipboard support (has('clipboard')), vim-minimal doesn't
 if ! pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo; then
@@ -132,11 +134,11 @@ echo "Setting up locale..."
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
 
-sed -i -r '/#en_US/ s|#||' /etc/locale.gen
-echo "LANG=en_US.UTF-8" >/etc/locale.conf
+sed -i -r '/#en_US\./ s|#||' /etc/locale.gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
 locale-gen
 
-echo "$HOSTNAME" >/etc/hostname
+echo "$HOSTNAME" > /etc/hostname
 
 echo "127.0.0.1  localhost" >> /etc/hosts
 echo "::1        localhost" >> /etc/hosts
@@ -158,9 +160,9 @@ dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
 
 echo "Creating user: $USER"
 
-useradd -m $USER
+useradd -G wheel,audio,video -m $USER
 passwd $USER < /dev/tty
-usermod -G wheel $USER
+# usermod -G wheel $USER
 
 echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
 echo "Granted $USER root privileges"
@@ -187,6 +189,8 @@ Home:
 $(ls /mnt/home/$USER)
 EOF
 
-CHECK "The system will now be rebooted."
+CHECK "The system will now be rebooted. Remove the installation media and ensure Linux boot loader has top priority."
+# [Aptio] Boot > UEFI Priorities
 
+# umount not strictly required
 reboot now
