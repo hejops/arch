@@ -1,8 +1,10 @@
 # youtube-dl	# generally outdated compared to yt-dlp
+# htop
 # mpc
 # mpd
 # ncmpcpp
 # noto-fonts-cjk	# quite large
+# vim
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
 ack
 acpi
@@ -23,6 +25,7 @@ dash
 dos2unix
 dunst
 exa
+fd
 feh
 ffmpeg
 ffmpegthumbnailer
@@ -32,7 +35,6 @@ flameshot
 fzf
 gnupg
 groff
-htop
 hunspell
 i3lock
 inetutils
@@ -96,7 +98,7 @@ udisks2
 unzip
 upower
 usbutils # lsusb
-vim
+w3m
 xdg-utils
 xorg-xinit
 xorg-xrandr
@@ -105,3 +107,4 @@ xournalpp
 yt-dlp
 zathura-pdf-mupdf
 zathura-ps
+kitty
