@@ -3,13 +3,9 @@
 # bash is required for arrays
 set -euo pipefail
 
-# QUERY="pacman -Ss"
-AURINSTALL="trizen --get"
-PIPINSTALL="pip3 install"
-PKGMGR=pacman
-
 if stat ~/arch | grep -q 'Uid: (    0/    root)'; then
 	sudo chown -R joseph ~/arch
+	# can also chgrp, but not necessary
 fi
 
 fix_pacman_keys() {
@@ -29,7 +25,8 @@ fix_pacman_keys() {
 
 sudo pacman -Syu
 
-MAIN=$(grep < ./packages.txt -Po '^[^# ]+' | xargs)
+# MAIN=($(grep < ./packages.txt -Po '^[^# ]+' | xargs))
+IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# ]+' | xargs)"
 
 sudo pacman -S --needed "${MAIN[@]}"
 
@@ -50,67 +47,132 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 	rsync -vua dotfiles/ .
 	xrdb -merge .Xresources
 
+	# TODO: separate window?
+	vim
+
 	cd
 	git clone https://github.com/hejops/scripts
 	bash scripts/links ~/scripts
+	dwmstatus &
 
 fi
 
-mkdir -p ~/wallpaper
-
-# when connected to monitor (x230), behaves like ignore anyway?
-# x240 behaves like it should
-
-# cat /etc/systemd/logind.conf |
-# 	sed 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
-# 	sudo tee /etc/systemd/logind.conf
-
-systemctl enable cronie
-systemctl start cronie
-crontab ~/.cron
-crontab -l
+if ! systemctl status cronie | grep -F '(running)'; then
+	systemctl enable cronie
+	systemctl start cronie
+	crontab ~/.cron
+	crontab -l
+fi
 
 # TODO urxvt addons? "local" workarounds?
 
-setup_mail() {
+# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+# sh Anaconda3-2022.05-Linux-x86_64.sh
+# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
+# conda init
 
-	systemctl enable --user mbsync.timer
-	systemctl start --user mbsync.timer
+if ! command -v trizen; then
+	# sudo pacman -Sy --needed base-devel git
+	git clone https://aur.archlinux.org/trizen.git
+	cd trizen
+	makepkg -si # NOT sudo
+	cd ..
+	rm -rf trizen
+fi
 
-	grep < .mbsyncrc -v '#' | grep -Po '\.mail.+' | xargs mkdir -p
-	mkdir -p ~/.passwd
+IFS=" " read -r -a AUR <<< "$(grep < ./aur.txt -Po '^[^# ]+' | xargs)"
+# TODO: noconfirm?
+trizen -S --needed "${AUR[@]}"
 
-	# notmuch new
+setup_ff() { #{{{
 
-	# TODO: regenerate gmail app password ~/.passwd/gmail.txt
-	# firefox https://myaccount.google.com/apppasswords
+	if [[ ! -f ~/.mozilla/firefox/4clnophl.default/extensions.txt ]]; then
+		xargs < ~/.mozilla/firefox/4clnophl.default/extensions.txt -n1 firefox
+	fi
 
-	# mbsync -Va #&
-	# mailtag
-}
-
-setup_mail
-
-setup_ff() {
-
-	if ! find .mozilla -name 'tridactyl.json' | grep .; then
+	if [[ ! -f ~/.mozilla/native-messaging-hosts/tridactyl.json ]]; then
+		# if ! find ~/.mozilla -name 'tridactyl.json' | grep .; then
 		curl \
 			-fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh \
 			-o /tmp/trinativeinstall.sh &&
 			sh /tmp/trinativeinstall.sh 1.22.1
+		# TODO: version might need to match
 		# TODO: tridactyl :source
 	fi
-
-	jq < ~/.mozilla/firefox/4clnophl.default/extensions.json -r .addons[].sourceURI |
-		grep xpi$ |
-		xargs -n1 firefox
 
 	# TODO: cookies.sqlite -- block cookies to avoid youtube consent screen
 	# INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);
 
 }
 
+setup_ff
+
+#}}}
+
+# media
+
+mkdir -p ~/wallpaper
+
+if ! scrobbler list-users | grep hejops; then
+	scrobbler add-user hejops
+	# check that scrobbler works
+	scrobbler now-playing hejops testartist testtrack
+fi
+
+# TODO: regenerate ~/.config/mpv/queue
+
+setup_mail() { #{{{
+
+	# very slow, should be done last
+
+	systemctl status --user mbsync | grep loaded && return
+
+	systemctl enable --user mbsync.timer
+	systemctl start --user mbsync.timer
+
+	systemctl status --user mbsync | grep -F '(running)' && return
+
+	[[ -f ~/.passwd/gmail.txt ]] && return
+
+	grep < ~/.mbsyncrc -v '#' | grep -Po '\.mail.+' | xargs mkdir -pv
+	mkdir -p ~/.passwd
+
+	notmuch new
+
+	read -r -p "Gmail password (leave blank to generate in browser): " gmail_pw < /dev/tty
+	if [[ -n $gmail_pw ]]; then
+		echo "$gmail_pw" > ~/.passwd/gmail.txt
+	else
+		firefox "https://myaccount.google.com/apppasswords"
+		read -r -p "Gmail password: " gmail_pw < /dev/tty
+		if [[ -n $gmail_pw ]]; then
+			echo "$gmail_pw" > ~/.passwd/gmail.txt
+		else
+			echo "Aborted"
+			exit 1
+		fi
+	fi
+
+	# TODO: first should fail, complaining about missing near side dirs -- just rerun lol
+	mbsync -Va || :
+	mbsync -Va
+	# mailtag
+	systemctl restart --user mbsync.timer
+
+	exit
+}
+
+#}}}
+
+setup_mail
+
 # setup hardware (audio, mouse, MIDI, etc) {{{
+
+# don't suspend on lid close
+if [[ -d /proc/acpi/button/lid ]]; then
+	sed < /etc/systemd/logind.conf 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
+		sudo tee /etc/systemd/logind.conf
+fi
 
 # pulseaudio -D -- dwm startup?
 
@@ -124,8 +186,9 @@ setup_ff() {
 # echo "Testing sound..."
 # speaker-test -c 2 -D plughw:1
 
-sudo usermod -a -G audio joseph
-sudo usermod -a -G realtime joseph
+# can be done earlier
+# sudo usermod -a -G audio joseph
+# sudo usermod -a -G realtime joseph
 
 # fix speaker hum?
 # https://unix.stackexchange.com/a/513491
@@ -136,38 +199,12 @@ sudo usermod -a -G realtime joseph
 
 # https://wiki.archlinux.org/title/TrackPoint#udev_rule
 # https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
-# not persistent:
-# echo 255 | sudo tee /sys/devices/platform/i8042/serio1/serio2/speed
-# echo 180 | sudo tee /sys/devices/platform/i8042/serio1/serio2/sensitivity
-
+# for persistent rules, udev rules must be created
 cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
-#}}}
 
-# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-# sh Anaconda3-2022.05-Linux-x86_64.sh
-# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
-# conda init
-
-if [ ! -x trizen ]; then
-	# sudo pacman -Sy --needed base-devel git
-	git clone https://aur.archlinux.org/trizen.git
-	cd trizen
-	makepkg -si # NOT sudo
-	cd
-	rm -r trizen
-fi
-
-AUR=$(grep < ./aur.txt -v '#' | xargs)
-# TODO: no prompt?
-trizen -S --needed "${AUR[@]}"
-
-if ! scrobbler list-users | grep hejops; then
-	scrobber add-user hejops
-fi
-
-# TODO: regenerate ~/.config/mpv/queue
+# }}}
 
 echo "Setup complete!"
 exit 0
