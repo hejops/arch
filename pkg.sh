@@ -89,6 +89,8 @@ trizen -S --needed "${AUR[@]}"
 
 setup_ff() { #{{{
 
+	# TODO: ensure browser open first?
+	# TODO: install tst first?
 	if [[ ! -f ~/.mozilla/firefox/4clnophl.default/extensions.txt ]]; then
 		xargs < ~/.mozilla/firefox/4clnophl.default/extensions.txt -n1 firefox
 	fi
@@ -100,8 +102,17 @@ setup_ff() { #{{{
 			-o /tmp/trinativeinstall.sh &&
 			sh /tmp/trinativeinstall.sh 1.22.1
 		# TODO: version might need to match
-		# TODO: tridactyl :source
+		# tridactyl :source not really necessary, just restart
 	fi
+
+	# TODO: policies.json -- only on ESR?
+	# TODO: remove all search engines and bookmarks
+	# https://github.com/dm0-/installer/blob/6cf8f0bbdc91757579bdcab53c43754094a9a9eb/configure.pkg.d/firefox.sh#L95
+	# https://github.com/mozilla/policy-templates/blob/master/README.md
+	# https://teddit.net/r/firefox/comments/7fr039/how_to_add_custom_search_engines/dqelr3g/#c
+
+	# TODO: restore addon settings (primarily ublock and cookiediscard)
+	# everything in storage/default/moz-extension* is binary/encrypted -- sad!
 
 	# TODO: cookies.sqlite -- block cookies to avoid youtube consent screen
 	# INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);
@@ -237,14 +248,19 @@ PIPS=(
 	tabulate
 )
 
+# pip aborts install if a single arg produces an error
+cat ~/scripts/*.py |
+	grep -Po '^(from|import) \w+' |
+	awk '{print $2}' |
+	sort -u |
+	xargs -n1 pip --exists-action i install
+
 TEX=(
 
 	# biblatex	use packaged one; source version will produce conflict with biber
 	csquotes
 	logreq
 )
-
-# grep < scripts/*.py -Po '^(from|import) \w+' | awk '{print $2}' | sort -u | xargs -n1 pip install
 
 # gdown "https://drive.google.com/uc?export=download&confirm=Qdl2&id=1sARoDPCJi9eix9ed2WNjXiTRc5yu7ipL"
 # TODO: move sf2 to somewhere
