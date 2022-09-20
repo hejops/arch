@@ -32,6 +32,7 @@ sudo make install
 
 cat << EOF > "$HOME/.xinitrc"
 export PATH=\$PATH:\$HOME/.local/bin
+export XCOMPOSEFILE=\$HOME/.config/X11/XCompose
 xrdb -merge ~/.Xresources
 dwm
 EOF
