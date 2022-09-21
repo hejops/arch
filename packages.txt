@@ -4,6 +4,7 @@
 # mpd
 # ncmpcpp
 # noto-fonts-cjk	# quite large
+# rxvt-unicode
 # vim
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
 ack
@@ -22,6 +23,7 @@ cronie
 cuetools
 curl
 dash
+ddcutil
 dos2unix
 dunst
 exa
@@ -42,6 +44,7 @@ isync
 jq
 jupyter-notebook
 kid3
+kitty
 lame
 libnotify
 libreoffice-fresh
@@ -109,4 +112,3 @@ xournalpp
 yt-dlp
 zathura-pdf-mupdf
 zathura-ps
-kitty
