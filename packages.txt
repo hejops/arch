@@ -55,6 +55,7 @@ moreutils
 mp3info
 mpv
 musescore
+ncdu
 neomutt
 newsboat
 nicotine+
@@ -83,6 +84,7 @@ redshift
 rofi
 rsync
 rxvt-unicode
+screenfetch
 shellcheck
 shfmt
 socat
