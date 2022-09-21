@@ -22,7 +22,7 @@ ping -c 1 archlinux.org || sudo nmtui
 sudo pacman -Syu
 
 # https://www.davidtsadler.com/posts/installing-st-dmenu-and-dwm-in-arch-linux/
-sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama rxvt-unicode ranger firefox
+sudo pacman -S base-devel libx11 libxft xorg-server xorg-xinit terminus-font libxinerama kitty ranger firefox
 
 cd
 git clone https://github.com/hejops/dwm
