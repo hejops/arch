@@ -133,6 +133,9 @@ if ! scrobbler list-users | grep hejops; then
 	scrobbler now-playing hejops testartist testtrack
 fi
 
+nicowish -r
+# TODO: download columns not saved/restored properly; minor issue
+
 # TODO: regenerate ~/.config/mpv/queue
 
 setup_mail() { #{{{
