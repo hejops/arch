@@ -185,7 +185,17 @@ setup_mail
 
 # setup hardware (audio, mouse, MIDI, etc) {{{
 
-# don't suspend on lid close
+# prevent wifi from powering down
+# MT7921K/mt7921e (card/driver) sucks
+# sudo dmesg -w | grep wlp:
+# wlp2s0: Limiting TX power to 20 (20 - 0) dBm as advertised by 78:dd:12:0e:d0:32
+
+# iwlwifi driver does not appear to have this issue
+if ! lspci -knn | grep knn; then
+	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
+fi
+
+# if laptop, don't suspend on lid close
 if [[ -d /proc/acpi/button/lid ]]; then
 	sed < /etc/systemd/logind.conf 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
 		sudo tee /etc/systemd/logind.conf
@@ -232,9 +242,6 @@ echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # }}}
 
-echo "Setup complete!"
-exit 0
-
 # sudo mkdir /usr/share/soundfonts
 # sudo ln -s "/run/media/joseph/My Passport/files/gp/sf2/Chorium.sf2" /usr/share/soundfonts/default.sf2
 #
@@ -267,6 +274,9 @@ cat ~/scripts/*.py |
 	awk '{print $2}' |
 	sort -u |
 	xargs -n1 pip --exists-action i install
+
+echo "Setup complete!"
+exit 0
 
 TEX=(
 
