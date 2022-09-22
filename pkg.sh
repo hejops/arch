@@ -221,11 +221,14 @@ cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
 
-sudo modprobe i2c-dev
-groupadd i2c
-usermod -aG i2c joseph
-echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
-# relogin required
+# # i2c-dev is the module, i2c is the group (i think)
+# # per-login, potentially superseded by modules-load
+# sudo usermod -aG i2c "$(whoami)"
+# sudo modprobe i2c-dev
+# echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
+
+# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
+echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # }}}
 
@@ -254,7 +257,7 @@ PIPS=(
 	jupytext
 	lastpy
 	pandas
-	python-mpv # TODO: import fails, better to curl from source directly
+	python-mpv # TODO: taggenre import fails?
 	tabulate
 )
 
