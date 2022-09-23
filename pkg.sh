@@ -125,7 +125,7 @@ setup_ff
 
 # media
 
-mkdir -p ~/wallpaper
+wallset
 
 if ! scrobbler list-users | grep hejops; then
 	scrobbler add-user hejops
@@ -134,9 +134,6 @@ if ! scrobbler list-users | grep hejops; then
 fi
 
 nicowish -r
-# TODO: download columns not saved/restored properly; minor issue
-
-# TODO: regenerate ~/.config/mpv/queue
 
 setup_mail() { #{{{
 
