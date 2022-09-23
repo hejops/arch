@@ -185,15 +185,18 @@ setup_mail
 # prevent wifi from powering down
 # MT7921K/mt7921e (card/driver) sucks
 # sudo dmesg -w | grep wlp:
-# wlp2s0: Limiting TX power to 20 (20 - 0) dBm as advertised by 78:dd:12:0e:d0:32
+# wlp2s0: Limiting TX power to 20 (20 - 0) dBm as advertised by 78:dd:12:0e:d0:32 -- this is actually normal behaviour
+
+# TODO: not sure which of these (if any) definitively solves the problem
 
 # sudo iwconfig wlp2s0 power off
-# nope
 
-# iwlwifi driver does not appear to have this issue
-if ! lspci -knn | grep knn; then
-	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
-fi
+# echo "options iwlwifi 11n_disable=1 swcrypto=1 power_save=0" | sudo tee /etc/modprobe.d/iwlwifi.conf
+
+# # iwlwifi driver does not appear to have this issue
+# if ! lspci -knn | grep knn; then
+# 	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
+# fi
 
 # if laptop, don't suspend on lid close
 if [[ -d /proc/acpi/button/lid ]]; then
