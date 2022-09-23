@@ -190,8 +190,7 @@ fi
 
 # pulseaudio -D -- dwm startup?
 
-# TODO: if USB speaker, raise volume to 90
-# amixer set Master 90%
+vol --auto
 
 # asoundconf list
 # HDMI is usually not what we want
@@ -218,11 +217,11 @@ cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
 
-sudo modprobe i2c-dev
-groupadd i2c
-usermod -aG i2c joseph
-echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
-# relogin required
+# sudo modprobe i2c-dev
+# groupadd i2c
+# usermod -aG i2c joseph
+# echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
+# # relogin required
 
 # }}}
 
