@@ -190,6 +190,9 @@ setup_mail
 # sudo dmesg -w | grep wlp:
 # wlp2s0: Limiting TX power to 20 (20 - 0) dBm as advertised by 78:dd:12:0e:d0:32
 
+# sudo iwconfig wlp2s0 power off
+# nope
+
 # iwlwifi driver does not appear to have this issue
 if ! lspci -knn | grep knn; then
 	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
