@@ -89,6 +89,8 @@ trizen -S --needed "${AUR[@]}"
 
 setup_ff() { #{{{
 
+	# TODO: https://github.com/Aethlas/fflz4
+
 	# TODO: ensure browser open first?
 	# TODO: install tst first?
 	if [[ ! -f ~/.mozilla/firefox/4clnophl.default/extensions.txt ]]; then
@@ -189,7 +191,7 @@ setup_mail
 
 # TODO: not sure which of these (if any) definitively solves the problem
 
-# sudo iwconfig wlp2s0 power off
+# sudo iwconfig wlp2s0 power off -- doesn't seem to work, and not persistent
 
 # echo "options iwlwifi 11n_disable=1 swcrypto=1 power_save=0" | sudo tee /etc/modprobe.d/iwlwifi.conf
 
@@ -250,10 +252,7 @@ echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 #
 # wildmidi requires /etc/wildmidi/wildmidi.cfg
 
-# misc
-# https://github.com/Aethlas/fflz4
-
-# installed to .local/bin by default; this is included in $PATH
+# installed to ~/.local/bin by default; this is included in $PATH
 PIPS=(
 
 	# biopython
@@ -270,6 +269,8 @@ PIPS=(
 	python-mpv # TODO: taggenre import fails?
 	tabulate
 )
+
+pip install "${PIPS[@]}"
 
 # pip aborts install if a single arg produces an error
 cat ~/scripts/*.py |
@@ -292,8 +293,6 @@ TEX=(
 # TODO: move sf2 to somewhere
 # TODO: set PCH? device in Qjackctl.conf
 # TODO: set soundfont in Qsynth.conf
-
-pip install "${PIPS[@]}"
 
 exit
 
