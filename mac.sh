@@ -14,7 +14,7 @@ set -euo pipefail
 # must redo after every system update...
 xcode-select --install || :
 
-IFS=" " read -r -a MAIN <<< "$(grep < ./packages_mac.txt -Po '^[^# 	]+' | xargs)"
+IFS=" " read -r -a MAIN <<< "$(perl < ./packages_mac.txt -nle'print if m{^[^# 	]+}' | xargs)"
 brew install "${MAIN[@]}"
 
 exit
