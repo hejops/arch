@@ -1,18 +1,22 @@
-# youtube-dl	# generally outdated compared to yt-dlp
 # htop
 # mpc
 # mpd
 # ncmpcpp
 # noto-fonts-cjk	# quite large
 # rxvt-unicode
+# ttf-fira-code
+# ttf-fira-mono
+# ttf-fira-sans
 # vim
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
+# youtube-dl	# generally outdated compared to yt-dlp
 ack
 acpi
 acpilight
 adobe-source-han-sans-cn-fonts
 adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
+aerc			# fetching seems absurdly easy
 alsa-utils
 at
 bash-language-server
@@ -35,12 +39,15 @@ firefox
 flac
 flameshot
 fzf
+github-cli
+glxinfo
 gnupg
 groff
 hunspell
 hwinfo
 i3lock
 inetutils
+inxi
 isync
 jq
 jupyter-notebook
@@ -49,9 +56,11 @@ kitty
 lame
 libnotify
 libreoffice-fresh
+libva-mesa-driver
 lilypond
 lowdown
 lshw
+mac			# ape decoder
 maim
 make
 man
@@ -69,16 +78,21 @@ notmuch
 noto-fonts
 npm
 ntfs-3g
+otf-fira-mono
+otf-fira-sans
+p7zip
 pacman-contrib # checkupdates
 pavucontrol
 pcre
 pdftk
+perl-file-mimeinfo	# mimeopen (lf default)
 picom
 prettier
 pulseaudio
 pulseaudio-alsa
 python-pdftotext
 python-pip
+python-setuptools	# required for "import pkg_resources" calls
 python3
 qjackctl
 qsynth
@@ -88,31 +102,40 @@ recode
 redshift
 rofi
 rsync
+rustup
 rxvt-unicode
 screenfetch
 shellcheck
 shfmt
 socat
+sof-firmware
 stylua
 sysstat # mpstat
 system-config-printer
 telegram-desktop
 texlive-bin
 texlive-core
-ttf-ibm-plex
+transmission-cli
+ttf-ibm-plex	# mono sans serif; no otf
 udiskie
 udisks2
 unzip
 upower
 usbutils # lsusb
+virtualbox
+virtualbox-guest-iso
+virtualbox-host-modules-arch
 w3m
 wireless_tools
 xdg-utils
 xdotool
+xf86-video-amdgpu
 xorg-xinit
 xorg-xrandr
 xorg-xsetroot
 xournalpp
 yt-dlp
+zathura-djvu
 zathura-pdf-mupdf
 zathura-ps
+zip
