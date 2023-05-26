@@ -1,0 +1,45 @@
+# at
+# bash-language-server
+# groff
+# isync
+# jupyter-notebook
+# libreoffice-fresh
+# lowdown
+# neomutt
+# notmuch
+# ntfs-3g
+# pdftk
+# python-pdftotext
+# python-pip
+# rofi
+# telegram-desktop
+# udiskie
+# udisks2
+# usbutils # lsusb
+# yt-dlp
+# zathura-pdf-mupdf
+# zathura-ps
+ack
+dos2unix
+exa
+fd
+feh
+firefox-nightly
+fzf
+gh	# github-cli
+jq
+kitty-nightly
+moreutils
+ncdu
+node
+npm
+pcre
+prettier
+python	# for pip?
+ranger
+recode
+redshift
+rxvt-unicode
+shellcheck
+shfmt
+w3m

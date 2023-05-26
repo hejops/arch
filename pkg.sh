@@ -89,6 +89,8 @@ trizen -S --needed "${AUR[@]}"
 
 setup_ff() { #{{{
 
+	# TODO: https://github.com/Aethlas/fflz4
+
 	# TODO: ensure browser open first?
 	# TODO: install tst first?
 	if [[ ! -f ~/.mozilla/firefox/4clnophl.default/extensions.txt ]]; then
@@ -182,7 +184,23 @@ setup_mail
 
 # setup hardware (audio, mouse, MIDI, etc) {{{
 
-# don't suspend on lid close
+# prevent wifi from powering down
+# MT7921K/mt7921e (card/driver) sucks
+# sudo dmesg -w | grep wlp:
+# wlp2s0: Limiting TX power to 20 (20 - 0) dBm as advertised by 78:dd:12:0e:d0:32 -- this is actually normal behaviour
+
+# TODO: not sure which of these (if any) definitively solves the problem
+
+# sudo iwconfig wlp2s0 power off -- doesn't seem to work, and not persistent
+
+# echo "options iwlwifi 11n_disable=1 swcrypto=1 power_save=0" | sudo tee /etc/modprobe.d/iwlwifi.conf
+
+# # iwlwifi driver does not appear to have this issue
+# if ! lspci -knn | grep knn; then
+# 	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
+# fi
+
+# if laptop, don't suspend on lid close
 if [[ -d /proc/acpi/button/lid ]]; then
 	sed < /etc/systemd/logind.conf 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
 		sudo tee /etc/systemd/logind.conf
@@ -217,26 +235,26 @@ cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
 
-# sudo modprobe i2c-dev
 # groupadd i2c
-# usermod -aG i2c joseph
+# # relogin required (?)
+# # i2c-dev is the module, i2c is the group (i think)
+# # per-login, potentially superseded by modules-load
+# sudo usermod -aG i2c "$(whoami)"
+# sudo modprobe i2c-dev
 # echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
-# # relogin required
+
+# i2c allows control of display hardware
+# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
+echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # }}}
-
-echo "Setup complete!"
-exit 0
 
 # sudo mkdir /usr/share/soundfonts
 # sudo ln -s "/run/media/joseph/My Passport/files/gp/sf2/Chorium.sf2" /usr/share/soundfonts/default.sf2
 #
 # wildmidi requires /etc/wildmidi/wildmidi.cfg
 
-# misc
-# https://github.com/Aethlas/fflz4
-
-# installed to .local/bin by default; this is included in $PATH
+# installed to ~/.local/bin by default; this is included in $PATH
 PIPS=(
 
 	# biopython
@@ -250,9 +268,11 @@ PIPS=(
 	jupytext
 	lastpy
 	pandas
-	python-mpv # TODO: import fails, better to curl from source directly
+	python-mpv # TODO: taggenre import fails?
 	tabulate
 )
+
+pip install "${PIPS[@]}"
 
 # pip aborts install if a single arg produces an error
 cat ~/scripts/*.py |
@@ -260,6 +280,9 @@ cat ~/scripts/*.py |
 	awk '{print $2}' |
 	sort -u |
 	xargs -n1 pip --exists-action i install
+
+echo "Setup complete!"
+exit 0
 
 TEX=(
 
@@ -272,8 +295,6 @@ TEX=(
 # TODO: move sf2 to somewhere
 # TODO: set PCH? device in Qjackctl.conf
 # TODO: set soundfont in Qsynth.conf
-
-pip install "${PIPS[@]}"
 
 exit
 
