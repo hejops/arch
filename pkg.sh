@@ -32,6 +32,8 @@ IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# ]+' | xargs)"
 
 sudo pacman -S --needed "${MAIN[@]}"
 
+rustup default stable
+
 if ! [[ -f "$HOME/.git-credentials" ]]; then
 	git config --global credential.helper store
 	echo "Setting up Github PAT..."
