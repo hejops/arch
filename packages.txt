@@ -3,6 +3,7 @@
 # mpd
 # ncmpcpp
 # noto-fonts-cjk	# quite large
+# pulseaudio
 # rxvt-unicode
 # ttf-fira-code
 # ttf-fira-mono
@@ -87,6 +88,7 @@ pcre
 pdftk
 perl-file-mimeinfo	# mimeopen (lf default)
 picom
+pipewire-pulse
 prettier
 pulseaudio
 pulseaudio-alsa
