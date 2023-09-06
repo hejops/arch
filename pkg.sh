@@ -60,6 +60,8 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 
 fi
 
+systemctl --user start pipewire-pulse.service
+
 if ! systemctl status cronie | grep -F '(running)'; then
 	systemctl enable cronie
 	systemctl start cronie
