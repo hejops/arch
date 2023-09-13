@@ -66,6 +66,7 @@ maim
 make
 man
 mediainfo
+mednafen
 moreutils
 mp3info
 mpv
@@ -83,15 +84,16 @@ otf-fira-mono
 otf-fira-sans
 p7zip
 pacman-contrib # checkupdates
+pandoc
 pavucontrol
 pcre
 pdftk
 perl-file-mimeinfo	# mimeopen (lf default)
 picom
+pipewire
+pipewire-alsa
 pipewire-pulse
 prettier
-pulseaudio
-pulseaudio-alsa
 python-pdftotext
 python-pip
 python-setuptools	# required for "import pkg_resources" calls
@@ -127,6 +129,7 @@ usbutils # lsusb
 virtualbox
 virtualbox-guest-iso
 virtualbox-host-modules-arch
+vulkan-radeon	# https://wiki.archlinux.org/title/Vulkan#Installation
 w3m
 wireless_tools
 xdg-utils
@@ -137,6 +140,7 @@ xorg-xrandr
 xorg-xsetroot
 xournalpp
 yt-dlp
+yuzu
 zathura-djvu
 zathura-pdf-mupdf
 zathura-ps
