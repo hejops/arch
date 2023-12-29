@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# (cd)
-# git clone https://github.com/hejops/arch (public)
-# cd arch
-# bash mac.sh
+# https://raw.githubusercontent.com/hejops/arch/master/mac.sh
 
 # homebrew is avoided at all costs
 
@@ -27,44 +24,19 @@ build() {
 
 }
 
-# port: ranger lowdown shfmt npm? pcregrep pip?
+# port: ranger lowdown shfmt npm? pcregrep pip? ack ag ripgrep exa ncdu fzf shellcheck
 
+# these should be obtained via nvim-mason now
 # pip: black
 # npm i -g: prettier bash-language-server
 
-# IFS=" " read -r -a MAIN <<< "$(perl < ./packages_mac.txt -nle'print if m{^[^# 	]+}' | xargs)"
-
 dotfiles() {
-
-	# .bashrc
-	# .bash_aliases
-	# .vim
-
-	dirs_to_copy=(
-
-		kitty
-		nvim
-		ranger
-		readline
-		tridactyl
-	)
-
-	for x in "${dirs_to_copy[@]}"; do
-		ln -sf ~/dotfiles/.config/"$x" ~/.config
-	done
-
-	exit
 
 	# git config --global user.email hejops1@gmail.com
 	# git config --global user.name Joseph
 
-	# TODO: remove and stop tracking sensitive files:
-	# .cron
-	# ~/.config/nicotine
-	# ~/.config/newsboat
-	# ~/.config/tridactyl/tridactylrc
-
-	if ! [[ -f "$HOME/.git-credentials" ]]; then
+	# TODO: better to set up ssh key(s)
+	if [[ ! -f "$HOME/.git-credentials" ]]; then
 		git config --global credential.helper store
 		echo "Setting up Github PAT..."
 		open "https://github.com/settings/tokens/new" > /dev/null
@@ -73,21 +45,22 @@ dotfiles() {
 			tr -d ' ' |
 			tee "$HOME/.git-credentials"
 
-		# get dotfiles and scripts
-
-		cd
-		git clone https://github.com/hejops/dotfiles
-
 	fi
 
+	# get dotfiles and scripts
+	cd
+	git clone https://github.com/hejops/dotfiles
+	cd dotfiles
 	rm -rf "$HOME/.mozilla"
+	./install
 
-	# delete most dirs in config (or rather, rsync select dirs out)
+	# TODO: remove and stop tracking personal files:
+	# ~/.config/cron
+	# ~/.config/newsboat
+	# ~/.config/nicotine
+	# ~/.config/tridactyl/tridactylrc
 
-	# rsync -vua ~/dotfiles/ .
 	# rm -r ~/dotfiles
-
-	# xrdb -merge ~/.Xresources
 
 	# fonts dir: /Library/Fonts
 
