@@ -32,6 +32,8 @@ IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# 	]+' | xargs)"
 
 sudo pacman -S --needed "${MAIN[@]}"
 
+rustup default stable
+
 if ! [[ -f "$HOME/.git-credentials" ]]; then
 	git config --global credential.helper store
 	echo "Setting up Github PAT..."
@@ -46,12 +48,15 @@ if ! [[ -f "$HOME/.git-credentials" ]]; then
 	cd
 	git clone https://github.com/hejops/dotfiles
 	rm -rf "$HOME/.mozilla"
-	rsync -vua ~/dotfiles/ .
-	rm -r ~/dotfiles
-	xrdb -merge ~/.Xresources
+
+	cd ~/dotfiles
+	./install
+
+	# rsync -vua ~/dotfiles/ .
+	# rm -r ~/dotfiles
 
 	# TODO: separate window?
-	vim
+	nvim
 
 	cd
 	git clone https://github.com/hejops/scripts
@@ -254,9 +259,7 @@ cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
 EOF
 
-# enable ddcutil
-# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
-echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
+vol --auto
 
 # asoundconf list
 # HDMI is usually not what we want
@@ -268,6 +271,33 @@ echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 # can be done earlier
 # sudo usermod -a -G audio joseph
 # sudo usermod -a -G realtime joseph
+
+# fix speaker hum?
+# https://unix.stackexchange.com/a/513491
+# comment out suspend-on-idle in
+# /etc/pulse/system.pa
+# /etc/pulse/default.pa
+# didn't work
+
+# https://wiki.archlinux.org/title/TrackPoint#udev_rule
+# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
+# for persistent rules, udev rules must be created
+cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
+ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
+EOF
+
+# groupadd i2c
+# # relogin required (?)
+# # i2c-dev is the module, i2c is the group (i think)
+# # per-login, potentially superseded by modules-load
+# sudo usermod -aG i2c "$(whoami)"
+# sudo modprobe i2c-dev
+# echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
+
+# enable ddcutil
+# i2c allows control of display hardware
+# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
+echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # }}}
 
