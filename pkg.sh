@@ -28,7 +28,7 @@ fix_pacman_keys() {
 sudo pacman -Syu
 
 # MAIN=($(grep < ./packages.txt -Po '^[^# ]+' | xargs))
-IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# ]+' | xargs)"
+IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# 	]+' | xargs)"
 
 sudo pacman -S --needed "${MAIN[@]}"
 
@@ -65,16 +65,9 @@ systemctl --user start pipewire-pulse.service
 if ! systemctl status cronie | grep -F '(running)'; then
 	systemctl enable cronie
 	systemctl start cronie
-	crontab ~/.cron
+	crontab ~/.config/cron
 	crontab -l
 fi
-
-# TODO urxvt addons? "local" workarounds?
-
-# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-# sh Anaconda3-2022.05-Linux-x86_64.sh
-# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
-# conda init
 
 if ! command -v trizen; then
 	# sudo pacman -Sy --needed base-devel git
@@ -91,35 +84,79 @@ trizen -S --needed "${AUR[@]}"
 
 setup_ff() { #{{{
 
+	# https://askubuntu.com/a/73480
+	# https://devicetests.com/install-firefox-addon-command-line
+	# https://github.com/LukeSmithxyz/LARBS/blob/22c637b5fb551b6a1476a7e57a950fc03293e240/static/larbs.sh#L227C1-L239C6
+	# https://stackoverflow.com/a/37739112
+
+	# FF_PROFILE_DIR=~/.mozilla/firefox/4clnophl.default/extensions
+	FF_PROFILE_DIR=~/.mozilla/extensions
+
+	addons=(
+
+		# tabcenter-reborn
+		auto-tab-discard
+		cookie-autodelete
+		tree-style-tab
+		tridactyl-vim
+		ublock-origin
+	)
+
+	tmpdir=$(mktemp -d)
+	for addon in "${addons[@]}"; do
+		if [ "$addon" == ublock-origin ]; then
+			addonurl="$(
+				curl -sL https://api.github.com/repos/gorhill/uBlock/releases/latest |
+					grep -E 'browser_download_url.*\.firefox\.xpi' |
+					cut -d'"' -f4
+				# shame about the positional indexing
+				# jq -r .assets[1].browser_download_url
+			)"
+		else
+			addonurl="$(curl -sL "https://addons.mozilla.org/en-US/firefox/addon/${addon}/" |
+				grep -o 'https://addons.mozilla.org/firefox/downloads/file/[^"]*')"
+		fi
+		file="${addonurl##*/}"
+		curl -sJLO "$addonurl" > "$tmpdir/$file"
+		id="$(unzip -p "$file" manifest.json | grep '"id"' | cut -d'"' -f4)"
+		# id="${id%\"*}"
+		# id="${id##*\"}"
+		mv "$file" "$FF_PROFILE_DIR/$id.xpi"
+	done
+
 	# TODO: https://github.com/Aethlas/fflz4
 
-	# TODO: ensure browser open first?
-	# TODO: install tst first?
-	if [[ ! -f ~/.mozilla/firefox/4clnophl.default/extensions.txt ]]; then
-		xargs < ~/.mozilla/firefox/4clnophl.default/extensions.txt -n1 firefox
-	fi
+	# # TODO: ensure browser open first?
+	# # TODO: install tst first?
+	# if [[ ! -f $FF_PROFILE_DIR/extensions.txt ]]; then
+	# 	xargs < $FF_PROFILE_DIR/extensions.txt -n1 firefox
+	# fi
 
 	if [[ ! -f ~/.mozilla/native-messaging-hosts/tridactyl.json ]]; then
 		# if ! find ~/.mozilla -name 'tridactyl.json' | grep .; then
 		curl \
 			-fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh \
 			-o /tmp/trinativeinstall.sh &&
-			sh /tmp/trinativeinstall.sh 1.22.1
-		# TODO: version might need to match
+			sh /tmp/trinativeinstall.sh master
 		# tridactyl :source not really necessary, just restart
 	fi
 
 	# TODO: policies.json -- only on ESR?
-	# TODO: remove all search engines and bookmarks
+	# TODO: remove search engines except ddg
 	# https://github.com/dm0-/installer/blob/6cf8f0bbdc91757579bdcab53c43754094a9a9eb/configure.pkg.d/firefox.sh#L95
 	# https://github.com/mozilla/policy-templates/blob/master/README.md
 	# https://teddit.net/r/firefox/comments/7fr039/how_to_add_custom_search_engines/dqelr3g/#c
 
-	# TODO: restore addon settings (primarily ublock and cookiediscard)
-	# everything in storage/default/moz-extension* is binary/encrypted -- sad!
+	# TODO: restore addon settings (storage/default/moz-extension*)
 
-	# TODO: cookies.sqlite -- block cookies to avoid youtube consent screen
-	# INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);
+	# ublock: google -- disable inline scripts
+
+	sqlite3 $FF_PROFILE_DIR/places.sqlite "DELETE FROM moz_bookmarks;"
+	sqlite3 $FF_PROFILE_DIR/places.sqlite "DELETE FROM moz_places;"
+
+	# # TODO: cookies.sqlite -- block cookies on consent.youtube.com
+	# sqlite3 $FF_PROFILE_DIR/cookies.sqlite "INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);"
+	# INSERT INTO moz_cookies VALUES(2358,'^firstPartyDomain=youtube.com','CONSENT','PENDING+675','.youtube.com','/',1727208372,1664136373196881,1664136373196881,1,0,0,1,0,2);
 
 }
 
@@ -135,6 +172,7 @@ if ! scrobbler list-users | grep hejops; then
 	scrobbler add-user hejops
 	# check that scrobbler works
 	scrobbler now-playing hejops testartist testtrack
+	# TODO: curl check
 fi
 
 nicowish -r
@@ -208,10 +246,17 @@ if [[ -d /proc/acpi/button/lid ]]; then
 		sudo tee /etc/systemd/logind.conf
 fi
 
-# pulseaudio -D -- dwm startup?
+# increase trackpoint sensitivity, enable press to select
+# https://wiki.archlinux.org/title/TrackPoint#udev_rule
+# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
+# for persistent rules, udev rules must be created
+cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
+ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
+EOF
 
-# TODO: if USB speaker, raise volume to 90
-# amixer set Master 90%
+# enable ddcutil
+# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
+echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # asoundconf list
 # HDMI is usually not what we want
@@ -224,34 +269,12 @@ fi
 # sudo usermod -a -G audio joseph
 # sudo usermod -a -G realtime joseph
 
-# fix speaker hum?
-# https://unix.stackexchange.com/a/513491
-# comment out suspend-on-idle in
-# /etc/pulse/system.pa
-# /etc/pulse/default.pa
-# didn't work
-
-# https://wiki.archlinux.org/title/TrackPoint#udev_rule
-# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
-# for persistent rules, udev rules must be created
-cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
-ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
-EOF
-
-# # i2c-dev is the module, i2c is the group (i think)
-# # per-login, potentially superseded by modules-load
-# sudo usermod -aG i2c "$(whoami)"
-# sudo modprobe i2c-dev
-# echo 'KERNEL=="i2c-[0-9]*", GROUP="i2c"' | sudo tee /etc/udev/rules.d/10-local_i2c_group.rules
-
-# https://wiki.archlinux.org/title/Kernel_module#Automatic_module_loading
-echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
-
 # }}}
 
-# sudo mkdir /usr/share/soundfonts
-# sudo ln -s "/run/media/joseph/My Passport/files/gp/sf2/Chorium.sf2" /usr/share/soundfonts/default.sf2
-#
+# sf2_file="$HDD/guitar/sf2/Chorium.sf2"
+# [[ ! -d /usr/share/soundfonts ]] && sudo mkdir /usr/share/soundfonts
+# [[ -f $sf2_file ]] && sudo ln -s "$sf2_file" /usr/share/soundfonts/default.sf2
+
 # wildmidi requires /etc/wildmidi/wildmidi.cfg
 
 # installed to ~/.local/bin by default; this is included in $PATH
@@ -268,6 +291,7 @@ PIPS=(
 	jupytext
 	lastpy
 	pandas
+	pylint
 	python-mpv # TODO: taggenre import fails?
 	tabulate
 )
@@ -275,6 +299,7 @@ PIPS=(
 pip install "${PIPS[@]}"
 
 # pip aborts install if a single arg produces an error
+# TODO: remove package imports (false positive)
 cat ~/scripts/*.py |
 	grep -Po '^(from|import) \w+' |
 	awk '{print $2}' |
@@ -283,6 +308,11 @@ cat ~/scripts/*.py |
 
 echo "Setup complete!"
 exit 0
+
+# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+# sh Anaconda3-2022.05-Linux-x86_64.sh
+# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
+# conda init
 
 TEX=(
 
@@ -298,8 +328,8 @@ TEX=(
 
 exit
 
-jupyter nbextension install --py jupytext --user
-jupyter nbextension enable --py jupytext --user
+# jupyter nbextension install --py jupytext --user
+# jupyter nbextension enable --py jupytext --user
 
 setup_xdg_mime() {
 	# fonts are set in: .Xresources, firefox, rofi, dwm, .config/gtk-3.0/settings.ini
@@ -328,6 +358,11 @@ setup_autologin() {
 	ExecStart=-/usr/bin/agetty --autologin joseph --noclear %I $TERM
 EOF
 }
+
+/bin/gh auth login
+
+mkdir ~/.local/share/gnupg # otherwise cannot import keys
+gpg --gen-key              # not strictly necessary
 
 # unsf -- sudo make -f Makefile.linux install
 # cp /usr/share/applications/ranger.desktop "$HOME/.local/share/applications"
