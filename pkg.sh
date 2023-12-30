@@ -3,7 +3,7 @@
 # bash is required for arrays
 set -euo pipefail
 
-if stat ~/arch | grep -Fq 'Uid: (    0/    root)'; then
+if stat ~/arch | grep -Fq root; then
 	sudo chown -R joseph ~/arch
 	# can also chgrp, but not necessary
 fi
@@ -24,46 +24,92 @@ fix_pacman_keys() {
 }
 
 # fix_pacman_keys
-
 sudo pacman -Syu
 
-# MAIN=($(grep < ./packages.txt -Po '^[^# ]+' | xargs))
 IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# 	]+' | xargs)"
-
 sudo pacman -S --needed "${MAIN[@]}"
 
-rustup default stable
+setup_git_ssh() {
+	# without ssh, you cannot clone -any- repo. but with ssh, you can clone
+	# public and private repos.
 
-if ! [[ -f "$HOME/.git-credentials" ]]; then
-	git config --global credential.helper store
-	echo "Setting up Github PAT..."
-	xdg-open "https://github.com/settings/tokens/new" > /dev/null
-	read -r -p "PAT: " PAT < /dev/tty
-	echo "https://hejops:$PAT@github.com" |
-		tr -d ' ' |
-		tee "$HOME/.git-credentials"
+	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
+	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account
 
-	# get dotfiles and scripts
+	ssh-keygen -t ed25519 -C "hejops1@gmail.com"
+	eval "$(ssh-agent -s)"
+	ssh-add ~/.ssh/gh_hejops # private
 
-	cd
-	git clone https://github.com/hejops/dotfiles
-	rm -rf "$HOME/.mozilla"
+	# xclip -sel c ~/.ssh/gh_hejops.pub
+	# firefox https://github.com/settings/ssh/new
 
-	cd ~/dotfiles
-	./install
+	# https://cli.github.com/manual/gh_auth_login
+	MACHINE="$(cat /sys/devices/virtual/dmi/id/product_name)"
+	gh auth login
+	gh ssh-key add ~/.ssh/gh_hejops.pub --title "$MACHINE"
+	if ! ssh -T git@github.com; then
+		echo "ssh setup failed"
+		exit 1
+	fi
+}
 
-	# rsync -vua ~/dotfiles/ .
-	# rm -r ~/dotfiles
+ssh -T git@github.com || setup_git_ssh
 
-	# TODO: separate window?
-	nvim
+# if ! [[ -f "$HOME/.git-credentials" ]]; then
+# 	git config --global credential.helper store
+# 	echo "Setting up Github PAT..."
+# 	xdg-open "https://github.com/settings/tokens/new" > /dev/null
+# 	read -r -p "PAT: " PAT < /dev/tty
+# 	echo "https://hejops:$PAT@github.com" |
+# 		tr -d ' ' |
+# 		tee "$HOME/.git-credentials"
+# fi
 
-	cd
-	git clone https://github.com/hejops/scripts
-	bash ~/scripts/links ~/scripts
-	dwmstatus &
+# get dotfiles and scripts
+# in future, dotfiles will be public
 
-fi
+cd
+# git clone git@github.com:hejops/dotfiles.git
+git clone https://github.com/hejops/dotfiles
+git clone https://github.com/hejops/scripts
+
+read -r -p "Stop here and reorganise dotfiles and scripts with stow in mind"
+
+# to do this, we will need at least ranger and some git aliases
+mkdir -p ~/.config
+ln -vsf ~/dotfiles/.config/ranger ~/.config
+ln -vsf ~/dotfiles/.bash_aliases ~
+
+mkdir -p ~/dotfiles2
+ranger ~/dotfiles ~/dotfiles2
+
+# do the restructure...
+
+cd ~/dotfiles2
+
+git init
+git branch -M master
+git add .
+git commit -v
+firefox https://github.com/new &
+read -rp 'Repo name (not URL!): ' repo
+git remote add origin "https://github.com/hejops/$repo"
+git push -u origin master
+
+cd
+rm -rf ~/.config ~/.bash_aliases ~/.mozilla
+exit 0
+
+# now everything should be installed via stow
+git clone https://github.com/hejops/dotfiles
+git clone https://github.com/hejops/scripts
+~/dotfiles/install
+~/scripts/install
+
+kitty -e nvim &
+
+# bash ~/scripts/links ~/scripts # create symlinks in .local/bin
+# dwmstatus &
 
 systemctl --user start pipewire-pulse.service
 
@@ -87,7 +133,7 @@ IFS=" " read -r -a AUR <<< "$(grep < ./aur.txt -Po '^[^# ]+' | xargs)"
 # TODO: noconfirm?
 trizen -S --needed "${AUR[@]}"
 
-setup_ff() { #{{{
+setup_ff() { # {{{
 
 	# https://askubuntu.com/a/73480
 	# https://devicetests.com/install-firefox-addon-command-line
@@ -160,7 +206,7 @@ setup_ff() { #{{{
 
 setup_ff
 
-#}}}
+# }}}
 
 # media
 
@@ -175,7 +221,7 @@ fi
 
 nicowish -r
 
-setup_mail() { #{{{
+setup_mail() { # {{{
 
 	# very slow, should be done last
 
@@ -207,7 +253,8 @@ setup_mail() { #{{{
 		fi
 	fi
 
-	# TODO: first should fail, complaining about missing near side dirs -- just rerun lol
+	# TODO: first should fail, complaining about missing near side dirs --
+	# just rerun lol
 	mbsync -Va || :
 	mbsync -Va
 	# mailtag
@@ -216,7 +263,7 @@ setup_mail() { #{{{
 	exit
 }
 
-#}}}
+# }}}
 
 setup_mail
 
@@ -326,23 +373,23 @@ fi
 # installed to ~/.local/bin by default; this is included in $PATH
 PIPS=(
 
-	# biopython
-	# cget https://github.com/jaseg/python-mpv/raw/main/mpv.py
-	# modlamp
-	# rope
-	# vim-vint
+	# doq
+	# gdown
+	# tabulate
 	black
-	doq
-	gdown
 	jupytext
-	lastpy
+	lastpy # why?
 	pandas
 	pylint
-	python-mpv # TODO: taggenre import fails?
-	tabulate
+	python-mpv
 )
 
 pip install "${PIPS[@]}"
+
+CARGO=(funzzy)
+
+rustup default stable
+cargo install "${CARGO[@]}"
 
 # pip aborts install if a single arg produces an error
 # TODO: remove package imports (false positive)
