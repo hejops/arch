@@ -1,23 +1,23 @@
 # htop
-# mpc
-# mpd
-# ncmpcpp
+# noto-fonts
 # noto-fonts-cjk	# quite large
+# otf-fira-mono
 # pulseaudio
-# rxvt-unicode
-# ttf-fira-code
-# ttf-fira-mono
-# ttf-fira-sans
+# texlive-bin
+# texlive-binextra
+# texlive-core
+# texlive-latexrecommended	# pdfjam
+# ttf-ibm-plex
 # vim
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
-# youtube-dl	# generally outdated compared to yt-dlp
+# youtube-dl	# replaced by yt-dlp
 ack
 acpi
 acpilight
 adobe-source-han-sans-cn-fonts
 adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
-aerc			# fetching seems absurdly easy
+aerc			# potential neomutt replacement
 alsa-utils
 at
 bash-language-server
@@ -38,7 +38,6 @@ ffmpeg
 ffmpegthumbnailer
 firefox
 flac
-flameshot
 fzf
 github-cli
 glxinfo
@@ -52,7 +51,6 @@ inxi
 isync
 jq
 jupyter-notebook
-kid3
 kitty
 lame
 libnotify
@@ -77,18 +75,15 @@ newsboat
 nicotine+
 nodejs
 notmuch
-noto-fonts
 npm
 ntfs-3g
-otf-fira-mono
-otf-fira-sans
 p7zip
 pacman-contrib # checkupdates
 pandoc
 pavucontrol
 pcre
 pdftk
-perl-file-mimeinfo	# mimeopen (lf default)
+perl-file-mimeinfo	# mimeopen (lf's default opener)
 picom
 pipewire
 pipewire-alsa
@@ -113,14 +108,12 @@ shellcheck
 shfmt
 socat
 sof-firmware
+stow
 stylua
 sysstat # mpstat
 system-config-printer
 telegram-desktop
-texlive-bin
-texlive-core
 transmission-cli
-ttf-ibm-plex	# mono sans serif; no otf
 udiskie
 udisks2
 unzip
