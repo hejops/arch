@@ -131,14 +131,7 @@ setup_ff() { #{{{
 
 	# TODO: https://github.com/Aethlas/fflz4
 
-	# # TODO: ensure browser open first?
-	# # TODO: install tst first?
-	# if [[ ! -f $FF_PROFILE_DIR/extensions.txt ]]; then
-	# 	xargs < $FF_PROFILE_DIR/extensions.txt -n1 firefox
-	# fi
-
 	if [[ ! -f ~/.mozilla/native-messaging-hosts/tridactyl.json ]]; then
-		# if ! find ~/.mozilla -name 'tridactyl.json' | grep .; then
 		curl \
 			-fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh \
 			-o /tmp/trinativeinstall.sh &&
@@ -301,11 +294,34 @@ echo 'i2c-dev' | sudo tee /etc/modules-load.d/i2c-dev.conf
 
 # }}}
 
-# sf2_file="$HDD/guitar/sf2/Chorium.sf2"
-# [[ ! -d /usr/share/soundfonts ]] && sudo mkdir /usr/share/soundfonts
-# [[ -f $sf2_file ]] && sudo ln -s "$sf2_file" /usr/share/soundfonts/default.sf2
+if ! ls "$HOME/.config/etc/"*sf2; then
+	choria=(
 
-# wildmidi requires /etc/wildmidi/wildmidi.cfg
+		https://www.musical-artifacts.com/artifacts/1474/Chorium_fork.sf2
+		https://www.philscomputerlab.com/uploads/3/7/2/3/37231621/choriumreva.sf2
+		https://www.pistonsoft.com/soundfonts/chorium.sf2
+	)
+
+	for ch in "${choria[@]}"; do
+		curl -sJLO "$ch" && break
+	done
+
+	sf2_file=${ch##*/}
+	mv "$sf2_file" "$HOME/.config/etc"
+	sf2_file="$HOME/.config/etc/$sf2_file"
+
+	[[ ! -d /usr/share/soundfonts ]] && sudo mkdir /usr/share/soundfonts
+	sudo ln -s "$sf2_file" /usr/share/soundfonts/default.sf2
+
+	echo "soundfont \"$sf2_file\"" > "$HOME/.config/timidity.cfg"
+
+	mkdir -p "$HOME/.config/audacious"
+	cat <<- EOF > "$HOME/.config/audacious/config"
+		[amidiplug]
+		fsyn_soundfont_file=$sf2_file
+	EOF
+
+fi
 
 # installed to ~/.local/bin by default; this is included in $PATH
 PIPS=(
