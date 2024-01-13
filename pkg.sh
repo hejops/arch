@@ -3,7 +3,9 @@
 # bash is required for arrays
 set -euo pipefail
 
-if stat ~/arch | grep -Fq root; then
+if
+	stat ~/arch | grep -Fq root
+then
 	sudo chown -R joseph ~/arch
 	# can also chgrp, but not necessary
 fi
@@ -11,7 +13,7 @@ fi
 # TODO: allow shutdown/reboot without sudo
 
 fix_pacman_keys() {
-	# TODO check first
+	# TODO check when this is necessary
 	# https://bbs.archlinux.org/viewtopic.php?pid=1984300#p1984300
 	# enable ntp and ensure the time correct
 	sudo timedatectl set-ntp 1
@@ -26,8 +28,10 @@ fix_pacman_keys() {
 # fix_pacman_keys
 sudo pacman -Syu
 
-IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# 	]+' | xargs)"
-sudo pacman -S --needed "${MAIN[@]}"
+# IFS=" " read -r -a MAIN <<< "$(grep < ./packages.txt -Po '^[^# 	]+' | xargs)"
+# sudo pacman -S --needed "${MAIN[@]}"
+
+grep < ./packages.txt -Po '^[^# \t]+' | xargs sudo pacman -S --needed
 
 setup_git_ssh() {
 	# without ssh, you cannot clone -any- repo. but with ssh, you can clone
@@ -69,43 +73,50 @@ ssh -T git@github.com || setup_git_ssh
 # in future, dotfiles will be public
 
 cd
-# git clone git@github.com:hejops/dotfiles.git
-git clone https://github.com/hejops/dotfiles
+
+# https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
+# chezmoi init https://github.com/hejops/dotfiles.git # public
+chezmoi init git@github.com:hejops/dotfiles.git # private
+
+# # git clone git@github.com:hejops/dotfiles.git
+# git clone https://github.com/hejops/dotfiles
+# git clone https://github.com/hejops/scripts
+#
+# read -r -p "Stop here and reorganise dotfiles and scripts with stow in mind"
+#
+# # to do this, we will need at least ranger and some git aliases
+# mkdir -p ~/.config
+# ln -vsf ~/dotfiles/.config/ranger ~/.config
+# ln -vsf ~/dotfiles/.bash_aliases ~
+#
+# mkdir -p ~/dotfiles2
+# ranger ~/dotfiles ~/dotfiles2
+#
+# # do the restructure...
+#
+# cd ~/dotfiles2
+#
+# git init
+# git branch -M master
+# git add .
+# git commit -v
+# firefox https://github.com/new &
+# read -rp 'Repo name (not URL!): ' repo
+# git remote add origin "https://github.com/hejops/$repo"
+# git push -u origin master
+#
+# cd
+# rm -rf ~/.config ~/.bash_aliases ~/.mozilla
+# exit 0
+#
+# # now everything should be installed via stow
+# git clone https://github.com/hejops/dotfiles
+# ~/dotfiles/install
+
 git clone https://github.com/hejops/scripts
-
-read -r -p "Stop here and reorganise dotfiles and scripts with stow in mind"
-
-# to do this, we will need at least ranger and some git aliases
-mkdir -p ~/.config
-ln -vsf ~/dotfiles/.config/ranger ~/.config
-ln -vsf ~/dotfiles/.bash_aliases ~
-
-mkdir -p ~/dotfiles2
-ranger ~/dotfiles ~/dotfiles2
-
-# do the restructure...
-
-cd ~/dotfiles2
-
-git init
-git branch -M master
-git add .
-git commit -v
-firefox https://github.com/new &
-read -rp 'Repo name (not URL!): ' repo
-git remote add origin "https://github.com/hejops/$repo"
-git push -u origin master
-
-cd
-rm -rf ~/.config ~/.bash_aliases ~/.mozilla
-exit 0
-
-# now everything should be installed via stow
-git clone https://github.com/hejops/dotfiles
-git clone https://github.com/hejops/scripts
-~/dotfiles/install
 ~/scripts/install
 
+# let Lazy and Mason do their thing...
 kitty -e nvim &
 
 # bash ~/scripts/links ~/scripts # create symlinks in .local/bin
@@ -129,9 +140,11 @@ if ! command -v trizen; then
 	rm -rf trizen
 fi
 
-IFS=" " read -r -a AUR <<< "$(grep < ./aur.txt -Po '^[^# ]+' | xargs)"
-# TODO: noconfirm?
-trizen -S --needed "${AUR[@]}"
+# IFS=" " read -r -a AUR <<< "$(grep < ./aur.txt -Po '^[^# ]+' | xargs)"
+# # TODO: noconfirm?
+# trizen -S --needed "${AUR[@]}"
+
+grep < ./aur.txt -Po '^[^# ]+' | xargs trizen -S --needed
 
 setup_ff() { # {{{
 
@@ -155,7 +168,7 @@ setup_ff() { # {{{
 
 	tmpdir=$(mktemp -d)
 	for addon in "${addons[@]}"; do
-		if [ "$addon" == ublock-origin ]; then
+		if [ "$addon" = ublock-origin ]; then
 			addonurl="$(
 				curl -sL https://api.github.com/repos/gorhill/uBlock/releases/latest |
 					grep -E 'browser_download_url.*\.firefox\.xpi' |
@@ -177,7 +190,7 @@ setup_ff() { # {{{
 
 	# TODO: https://github.com/Aethlas/fflz4
 
-	if [[ ! -f ~/.mozilla/native-messaging-hosts/tridactyl.json ]]; then
+	if [ ! -f ~/.mozilla/native-messaging-hosts/tridactyl.json ]; then
 		curl \
 			-fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh \
 			-o /tmp/trinativeinstall.sh &&
@@ -185,18 +198,21 @@ setup_ff() { # {{{
 		# tridactyl :source not really necessary, just restart
 	fi
 
-	# TODO: policies.json -- only on ESR?
-	# TODO: remove search engines except ddg
+	# TODO: remove search engines except ddg; policies.json is ESR-only,
+	# tragic...
+	# https://mozilla.github.io/policy-templates/#searchengines--remove
+
+	# https://github.com/Alex313031/Mercury/blob/673aa3e8f3fcbf3436b12186212708d3aa7b853c/policies/policies.json#L11
 	# https://github.com/dm0-/installer/blob/6cf8f0bbdc91757579bdcab53c43754094a9a9eb/configure.pkg.d/firefox.sh#L95
-	# https://github.com/mozilla/policy-templates/blob/master/README.md
-	# https://teddit.net/r/firefox/comments/7fr039/how_to_add_custom_search_engines/dqelr3g/#c
+	# https://github.com/yokoffing/Betterfox/blob/master/policies.json
+	# https://mozilla.github.io/policy-templates/
 
 	# TODO: restore addon settings (storage/default/moz-extension*)
 
 	# ublock: google -- disable inline scripts
 
-	sqlite3 $FF_PROFILE_DIR/places.sqlite "DELETE FROM moz_bookmarks;"
-	sqlite3 $FF_PROFILE_DIR/places.sqlite "DELETE FROM moz_places;"
+	sqlite3 "$FF_PROFILE_DIR/places.sqlite" "DELETE FROM moz_bookmarks;"
+	sqlite3 "$FF_PROFILE_DIR/places.sqlite" "DELETE FROM moz_places;"
 
 	# # TODO: cookies.sqlite -- block cookies on consent.youtube.com
 	# sqlite3 $FF_PROFILE_DIR/cookies.sqlite "INSERT INTO moz_cookies VALUES(5593,'^firstPartyDomain=youtube.com','CONSENT','PENDING+447','.youtube.com','/',1723450203,1660378445948074,1660378204032779,1,0,0,1,0,2);"
@@ -232,24 +248,30 @@ setup_mail() { # {{{
 
 	systemctl status --user mbsync | grep -F '(running)' && return
 
-	[[ -f ~/.passwd/gmail.txt ]] && return
-
-	grep < ~/.mbsyncrc -v '#' | grep -Po '\.mail.+' | xargs mkdir -pv
+	# create mail dirs
+	grep < ~/.mbsyncrc -v '#' |
+		grep -F '.mail' |
+		awk -F' ' '{print $NF}' |
+		xargs mkdir -pv
 	mkdir -p ~/.passwd
 
+	# idempotent?
 	notmuch new
 
-	read -r -p "Gmail password (leave blank to generate in browser): " gmail_pw < /dev/tty
-	if [[ -n $gmail_pw ]]; then
-		echo "$gmail_pw" > ~/.passwd/gmail.txt
-	else
-		firefox "https://myaccount.google.com/apppasswords"
-		read -r -p "Gmail password: " gmail_pw < /dev/tty
-		if [[ -n $gmail_pw ]]; then
-			echo "$gmail_pw" > ~/.passwd/gmail.txt
+	if [ ! -f ~/.passwd/gmail.txt ]; then
+
+		read -r -p "Gmail password (leave blank to generate in browser): " gmail_pw < /dev/tty
+		if [ -z "$gmail_pw" ]; then
+			firefox "https://myaccount.google.com/apppasswords"
+			read -r -p "Gmail password: " gmail_pw < /dev/tty
+			if [ -n "$gmail_pw" ]; then
+				echo "$gmail_pw" > ~/.passwd/gmail.txt
+			else
+				echo "Aborted"
+				exit 1
+			fi
 		else
-			echo "Aborted"
-			exit 1
+			echo "$gmail_pw" > ~/.passwd/gmail.txt
 		fi
 	fi
 
@@ -285,18 +307,29 @@ setup_mail
 # 	echo "pmf=2" | sudo tee /etc/wpa_supplicant/wpa_supplicant.config
 # fi
 
-# if laptop, don't suspend on lid close
-if [[ -d /proc/acpi/button/lid ]]; then
-	sed < /etc/systemd/logind.conf 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
-		sudo tee /etc/systemd/logind.conf
+# laptop only
+if [ -d /proc/acpi/button/lid ]; then
+	# don't suspend on lid close
+	# sed < /etc/systemd/logind.conf 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' |
+	# 	sudo tee /etc/systemd/logind.conf
+	sudo sed -i 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' /etc/systemd/logind.conf
+
+	# increase trackpoint sensitivity, and enable press to select
+
+	# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
+	# https://wiki.archlinux.org/title/TrackPoint#udev_rule
+
+	cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
+ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
+EOF
+
 fi
 
-# increase trackpoint sensitivity, enable press to select
-# https://wiki.archlinux.org/title/TrackPoint#udev_rule
-# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
-# for persistent rules, udev rules must be created
-cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
-ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
+# https://github.com/goodboy/dotrc/blob/d22573e6de1d6edab5322ac128e4c82a2f1b4310/system/udev_rules/keyboard.rules
+# UDEV  [3416.376998] bind     /devices/pci0000:00/0000:00:08.1/0000:04:00.4/usb3/3-1 (usb)
+# ensure setxkbmap is run after every keyboard connect (essential for KVM)
+cat << EOF | sudo tee /etc/udev/rules.d/kinesis.rules
+ACTION=="add|bind|change", SUBSYSTEM=="usb", ENV{DISPLAY}=":0", ENV{HOME}="/home/$(whoami)", RUN+="/usr/bin/setxkbmap -layout us -option -option compose:rctrl,caps:menu"
 EOF
 
 vol --auto
@@ -357,7 +390,7 @@ if ! ls "$HOME/.config/etc/"*sf2; then
 	mv "$sf2_file" "$HOME/.config/etc"
 	sf2_file="$HOME/.config/etc/$sf2_file"
 
-	[[ ! -d /usr/share/soundfonts ]] && sudo mkdir /usr/share/soundfonts
+	[ ! -d /usr/share/soundfonts ] && sudo mkdir /usr/share/soundfonts
 	sudo ln -s "$sf2_file" /usr/share/soundfonts/default.sf2
 
 	echo "soundfont \"$sf2_file\"" > "$HOME/.config/timidity.cfg"
@@ -386,7 +419,10 @@ PIPS=(
 
 pip install "${PIPS[@]}"
 
-CARGO=(funzzy)
+CARGO=(
+
+	funzzy
+)
 
 rustup default stable
 cargo install "${CARGO[@]}"
@@ -401,11 +437,6 @@ cat ~/scripts/*.py |
 
 echo "Setup complete!"
 exit 0
-
-# curl -sJLO https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-# sh Anaconda3-2022.05-Linux-x86_64.sh
-# eval "$(/home/joseph/anaconda3/bin/conda shell.bash hook)"
-# conda init
 
 TEX=(
 
