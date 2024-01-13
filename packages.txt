@@ -1,8 +1,15 @@
+# bash-language-server
+# biber
 # htop
+# jupyter-notebook
 # noto-fonts
 # noto-fonts-cjk	# quite large
 # otf-fira-mono
 # pulseaudio
+# rxvt-unicode
+# shellcheck
+# stow
+# stylua
 # texlive-bin
 # texlive-binextra
 # texlive-core
@@ -20,8 +27,7 @@ adobe-source-han-sans-kr-fonts
 aerc			# potential neomutt replacement
 alsa-utils
 at
-bash-language-server
-biber
+chezmoi
 chromium
 clang
 cronie
@@ -32,13 +38,16 @@ ddcutil
 dos2unix
 dunst
 exa
-fd
+fd    # o
 feh
 ffmpeg
 ffmpegthumbnailer
 firefox
 flac
+font-manager
 fzf
+git-absorb
+git-delta
 github-cli
 glxinfo
 gnupg
@@ -50,7 +59,6 @@ inetutils
 inxi
 isync
 jq
-jupyter-notebook
 kitty
 lame
 libnotify
@@ -99,20 +107,18 @@ ranger
 realtime-privileges
 recode
 redshift
+renameutils   # qmv
 rofi
 rsync
 rustup
-rxvt-unicode
 screenfetch
-shellcheck
 shfmt
 socat
 sof-firmware
-stow
-stylua
 sysstat # mpstat
 system-config-printer
 telegram-desktop
+tig
 transmission-cli
 udiskie
 udisks2
@@ -122,12 +128,13 @@ usbutils # lsusb
 virtualbox
 virtualbox-guest-iso
 virtualbox-host-modules-arch
+visidata
 vulkan-radeon	# https://wiki.archlinux.org/title/Vulkan#Installation
 w3m
 wireless_tools
 xdg-utils
 xdotool
-xf86-video-amdgpu
+xf86-video-amdgpu # lshw -C display | grep -e vendor -e configuration
 xorg-xinit
 xorg-xrandr
 xorg-xsetroot
