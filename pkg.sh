@@ -78,47 +78,31 @@ ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
 
 cd
 
-# https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
-# chezmoi init https://github.com/hejops/dotfiles.git # public
-chezmoi init git@github.com:hejops/dotfiles.git # private
-
-# # git clone git@github.com:hejops/dotfiles.git
-# git clone https://github.com/hejops/dotfiles
-# git clone https://github.com/hejops/scripts
-#
-# read -r -p "Stop here and reorganise dotfiles and scripts with stow in mind"
-#
-# # to do this, we will need at least ranger and some git aliases
-# mkdir -p ~/.config
-# ln -vsf ~/dotfiles/.config/ranger ~/.config
-# ln -vsf ~/dotfiles/.bash_aliases ~
-#
-# mkdir -p ~/dotfiles2
-# ranger ~/dotfiles ~/dotfiles2
-#
-# # do the restructure...
-#
-# cd ~/dotfiles2
-#
+# migrate raw dotfiles to new chezmoi repo
+# chezmoi init
+# git ls-files | xargs -d '\n' chezmoi add	# dotfiles
+# cd ~/.local/share/chezmoi/dotfiles/ # == chezmoi cd
 # git init
-# git branch -M master
 # git add .
-# git commit -v
-# firefox https://github.com/new &
-# read -rp 'Repo name (not URL!): ' repo
-# git remote add origin "https://github.com/hejops/$repo"
-# git push -u origin master
-#
-# cd
-# rm -rf ~/.config ~/.bash_aliases ~/.mozilla
-# exit 0
-#
-# # now everything should be installed via stow
-# git clone https://github.com/hejops/dotfiles
-# ~/dotfiles/install
+# git commit -m "Initial commit"
+# gnew # dotfiles_chezmoi
 
-git clone https://github.com/hejops/scripts
-~/scripts/install
+# no need to track from home anymore
+# rm -rf ~/.git
+# mv ~/.git ~/.git_old
+
+# if done properly, cloning the new repo and applying to the current files
+# should have no effect
+
+# https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
+# not sure if this will go to dotfiles or dotfiles_chezmoi
+rm -rf ~/.local/share/chezmoi/dotfiles/ # simulate fresh system
+chezmoi init git@github.com:hejops/dotfiles_chezmoi.git
+chezmoi diff
+chezmoi -v apply
+
+# git clone git@github.com:hejops/scripts.git
+# ~/scripts/install
 
 # let Lazy and Mason do their thing...
 kitty -e nvim &
