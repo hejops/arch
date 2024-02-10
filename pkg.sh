@@ -40,34 +40,38 @@ setup_git_ssh() {
 	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
 	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account
 
-	ssh-keygen -t ed25519 -C "hejops1@gmail.com"
-	eval "$(ssh-agent -s)"
-	ssh-add ~/.ssh/gh_hejops # private
+	# https://cli.github.com/manual/gh_auth_login
 
-	# xclip -sel c ~/.ssh/gh_hejops.pub
-	# firefox https://github.com/settings/ssh/new
+	if [[ ! -f ~/.ssh/gh_hejops ]] ; then
+		mkdir -p ~/.ssh
+		ssh-keygen -f ~/.ssh/gh_hejops -t ed25519 -C "hejops1@gmail.com"
+	fi
+
+	# this should go in .bashrc
+	{
+		eval "$(ssh-agent -s)"
+		ssh-add ~/.ssh/gh_hejops # private
+	} > /dev/null 2>/dev/null
 
 	# https://cli.github.com/manual/gh_auth_login
+
+	if [[ ! -d ~/.config/gh ]] ; then 
+		chromium &
+		gh auth login
+	fi
+
 	MACHINE="$(cat /sys/devices/virtual/dmi/id/product_name)"
-	gh auth login
-	gh ssh-key add ~/.ssh/gh_hejops.pub --title "$MACHINE"
-	if ! ssh -T git@github.com; then
-		echo "ssh setup failed"
-		exit 1
+
+	if ! gh ssh-key list | grep -q $MACHINE; then
+
+		gh auth refresh -h github.com -s admin:public_key
+		gh auth refresh -h github.com -s admin:ssh_signing_key
+		gh ssh-key add ~/.ssh/gh_hejops.pub --title "${MACHINE}_$(date -I)"
+
 	fi
 }
 
-ssh -T git@github.com || setup_git_ssh
-
-# if ! [[ -f "$HOME/.git-credentials" ]]; then
-# 	git config --global credential.helper store
-# 	echo "Setting up Github PAT..."
-# 	xdg-open "https://github.com/settings/tokens/new" > /dev/null
-# 	read -r -p "PAT: " PAT < /dev/tty
-# 	echo "https://hejops:$PAT@github.com" |
-# 		tr -d ' ' |
-# 		tee "$HOME/.git-credentials"
-# fi
+ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
 
 # get dotfiles and scripts
 # in future, dotfiles will be public
