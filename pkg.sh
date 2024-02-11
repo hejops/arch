@@ -40,81 +40,69 @@ setup_git_ssh() {
 	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
 	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account
 
-	ssh-keygen -t ed25519 -C "hejops1@gmail.com"
-	eval "$(ssh-agent -s)"
-	ssh-add ~/.ssh/gh_hejops # private
+	# https://cli.github.com/manual/gh_auth_login
 
-	# xclip -sel c ~/.ssh/gh_hejops.pub
-	# firefox https://github.com/settings/ssh/new
+	if [[ ! -f ~/.ssh/gh_hejops ]] ; then
+		mkdir -p ~/.ssh
+		ssh-keygen -f ~/.ssh/gh_hejops -t ed25519 -C "hejops1@gmail.com"
+	fi
+
+	# this should go in .bashrc
+	{
+		eval "$(ssh-agent -s)"
+		ssh-add ~/.ssh/gh_hejops # private
+	} > /dev/null 2>/dev/null
 
 	# https://cli.github.com/manual/gh_auth_login
+
+	if [[ ! -d ~/.config/gh ]] ; then 
+		chromium &
+		gh auth login
+	fi
+
 	MACHINE="$(cat /sys/devices/virtual/dmi/id/product_name)"
-	gh auth login
-	gh ssh-key add ~/.ssh/gh_hejops.pub --title "$MACHINE"
-	if ! ssh -T git@github.com; then
-		echo "ssh setup failed"
-		exit 1
+
+	if ! gh ssh-key list | grep -q $MACHINE; then
+
+		gh auth refresh -h github.com -s admin:public_key
+		gh auth refresh -h github.com -s admin:ssh_signing_key
+		gh ssh-key add ~/.ssh/gh_hejops.pub --title "${MACHINE}_$(date -I)"
+
 	fi
 }
 
-ssh -T git@github.com || setup_git_ssh
-
-# if ! [[ -f "$HOME/.git-credentials" ]]; then
-# 	git config --global credential.helper store
-# 	echo "Setting up Github PAT..."
-# 	xdg-open "https://github.com/settings/tokens/new" > /dev/null
-# 	read -r -p "PAT: " PAT < /dev/tty
-# 	echo "https://hejops:$PAT@github.com" |
-# 		tr -d ' ' |
-# 		tee "$HOME/.git-credentials"
-# fi
+ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
 
 # get dotfiles and scripts
 # in future, dotfiles will be public
 
 cd
 
-# https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
-# chezmoi init https://github.com/hejops/dotfiles.git # public
-chezmoi init git@github.com:hejops/dotfiles.git # private
-
-# # git clone git@github.com:hejops/dotfiles.git
-# git clone https://github.com/hejops/dotfiles
-# git clone https://github.com/hejops/scripts
-#
-# read -r -p "Stop here and reorganise dotfiles and scripts with stow in mind"
-#
-# # to do this, we will need at least ranger and some git aliases
-# mkdir -p ~/.config
-# ln -vsf ~/dotfiles/.config/ranger ~/.config
-# ln -vsf ~/dotfiles/.bash_aliases ~
-#
-# mkdir -p ~/dotfiles2
-# ranger ~/dotfiles ~/dotfiles2
-#
-# # do the restructure...
-#
-# cd ~/dotfiles2
-#
+# migrate raw dotfiles to new chezmoi repo
+# chezmoi init
+# git ls-files | xargs -d '\n' chezmoi add	# dotfiles
+# cd ~/.local/share/chezmoi/dotfiles/ # == chezmoi cd
 # git init
-# git branch -M master
 # git add .
-# git commit -v
-# firefox https://github.com/new &
-# read -rp 'Repo name (not URL!): ' repo
-# git remote add origin "https://github.com/hejops/$repo"
-# git push -u origin master
-#
-# cd
-# rm -rf ~/.config ~/.bash_aliases ~/.mozilla
-# exit 0
-#
-# # now everything should be installed via stow
-# git clone https://github.com/hejops/dotfiles
-# ~/dotfiles/install
+# git commit -m "Initial commit"
+# gnew # dotfiles_chezmoi
 
-git clone https://github.com/hejops/scripts
-~/scripts/install
+# no need to track from home anymore
+# rm -rf ~/.git
+# mv ~/.git ~/.git_old
+
+# if done properly, cloning the new repo and applying to the current files
+# should have no effect
+
+# https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
+# not sure if this will go to dotfiles or dotfiles_chezmoi
+rm -rf ~/.local/share/chezmoi/dotfiles/ # simulate fresh system
+chezmoi init git@github.com:hejops/dotfiles_chezmoi.git
+chezmoi diff
+chezmoi -v apply
+
+# git clone git@github.com:hejops/scripts.git
+# ~/scripts/install
 
 # let Lazy and Mason do their thing...
 kitty -e nvim &
