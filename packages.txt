@@ -61,6 +61,7 @@ isync
 jq
 kitty
 lame
+lf
 libnotify
 libreoffice-fresh
 libva-mesa-driver
@@ -76,6 +77,7 @@ mednafen
 moreutils
 mp3info
 mpv
+mpv-mpris
 musescore
 ncdu
 neomutt
@@ -85,6 +87,7 @@ nodejs
 notmuch
 npm
 ntfs-3g
+ntp
 p7zip
 pacman-contrib # checkupdates
 pandoc
@@ -96,6 +99,7 @@ picom
 pipewire
 pipewire-alsa
 pipewire-pulse
+playerctl
 prettier
 python-pdftotext
 python-pip
