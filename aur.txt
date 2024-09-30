@@ -1,17 +1,19 @@
 # discord-ptb
-# font-manager
-# texlive-latexindent-meta
-# tllocalmgr-git
-# urxvt-perls # possibly unnecessary?
+# id3
+# lf-bin
+# teams-for-linux
+bizhawk-monort
+circumflex # hackernews client
 dragon-drop
 gruvbox-dark-gtk
 htop-vim
-id3
-lf-bin
 nsxiv # nsxiv-extra
+otf-symbola
 playitslowly
 scrobbler # https://github.com/hauzer/scrobbler#examples
+sfarklib-git	# sf2 converter
+sfarkxtc
 shntool
-simple-mtpfs
+simple-mtpfs	# android usb
 taptempo
-teams-for-linux
+yuzu # 3ds emulator

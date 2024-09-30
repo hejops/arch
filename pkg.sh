@@ -133,6 +133,7 @@ fi
 # trizen -S --needed "${AUR[@]}"
 
 grep < ./aur.txt -Po '^[^# ]+' | xargs trizen -S --needed
+sudo chown -R joseph /opt/bizhawk/ # https://aur.archlinux.org/packages/bizhawk-monort#comment-93784
 
 setup_ff() { # {{{
 
@@ -405,7 +406,8 @@ PIPS=(
 	python-mpv
 )
 
-pip install "${PIPS[@]}"
+# pip install "${PIPS[@]}"
+python -m pip install "${PIPS[@]}"
 
 CARGO=(
 
@@ -421,7 +423,16 @@ cat ~/scripts/*.py |
 	grep -Po '^(from|import) \w+' |
 	awk '{print $2}' |
 	sort -u |
-	xargs -n1 pip --exists-action i install
+	# xargs -n1 pip --exists-action i install
+	xargs -n1 python -m pip --exists-action i install
+
+# install gtk theme
+cd
+rm -rf ~/.local/share/themes/materia-custom
+cp -r /usr/share/themes/Materia ~/.local/share/themes/materia-custom
+cd ~/.local/share/themes
+prettier -w ./materia-custom/gtk-4.0/gtk-dark.css
+patch ./materia-custom/gtk-4.0/gtk-dark.css ./gtk-dark.diff
 
 echo "Setup complete!"
 exit 0
