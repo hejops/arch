@@ -42,7 +42,7 @@ setup_git_ssh() {
 
 	# https://cli.github.com/manual/gh_auth_login
 
-	if [[ ! -f ~/.ssh/gh_hejops ]] ; then
+	if [[ ! -f ~/.ssh/gh_hejops ]]; then
 		mkdir -p ~/.ssh
 		ssh-keygen -f ~/.ssh/gh_hejops -t ed25519 -C "hejops1@gmail.com"
 	fi
@@ -51,11 +51,11 @@ setup_git_ssh() {
 	{
 		eval "$(ssh-agent -s)"
 		ssh-add ~/.ssh/gh_hejops # private
-	} > /dev/null 2>/dev/null
+	} > /dev/null 2> /dev/null
 
 	# https://cli.github.com/manual/gh_auth_login
 
-	if [[ ! -d ~/.config/gh ]] ; then 
+	if [[ ! -d ~/.config/gh ]]; then
 		chromium &
 		gh auth login
 	fi
