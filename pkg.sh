@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# intended to be run on a system with most of the basics
 # bash is required for arrays
 set -euo pipefail
+
+# install and configure typical user programs
 
 if
 	stat ~/arch | grep -Fq root
 then
-	sudo chown -R joseph ~/arch
+	sudo chown -R "$USER" ~/arch
 	# can also chgrp, but not necessary
 fi
 
@@ -35,80 +36,24 @@ sudo pacman -Syu
 
 grep < ./packages.txt -Po '^[^# \t]+' | xargs sudo pacman -S --needed
 
-setup_git_ssh() {
-	# without ssh, you cannot clone -any- repo. but with ssh, you can clone
-	# public and private repos.
-
-	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
-	# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account
-
-	# https://cli.github.com/manual/gh_auth_login
-
-	if [[ ! -f ~/.ssh/gh_hejops ]] ; then
-		mkdir -p ~/.ssh
-		ssh-keygen -f ~/.ssh/gh_hejops -t ed25519 -C "hejops1@gmail.com"
-	fi
-
-	# this should go in .bashrc
-	{
-		eval "$(ssh-agent -s)"
-		ssh-add ~/.ssh/gh_hejops # private
-	} > /dev/null 2>/dev/null
-
-	# https://cli.github.com/manual/gh_auth_login
-
-	if [[ ! -d ~/.config/gh ]] ; then 
-		chromium &
-		gh auth login
-	fi
-
-	MACHINE="$(cat /sys/devices/virtual/dmi/id/product_name)"
-
-	if ! gh ssh-key list | grep -q $MACHINE; then
-
-		gh auth refresh -h github.com -s admin:public_key
-		gh auth refresh -h github.com -s admin:ssh_signing_key
-		gh ssh-key add ~/.ssh/gh_hejops.pub --title "${MACHINE}_$(date -I)"
-
-	fi
-}
-
-ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
+# ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
 
 # get dotfiles and scripts
-# in future, dotfiles will be public
 
 cd
 
-# migrate raw dotfiles to new chezmoi repo
-# chezmoi init
-# git ls-files | xargs -d '\n' chezmoi add	# dotfiles
-# cd ~/.local/share/chezmoi/dotfiles/ # == chezmoi cd
-# git init
-# git add .
-# git commit -m "Initial commit"
-# gnew # dotfiles_chezmoi
-
-# no need to track from home anymore
-# rm -rf ~/.git
-# mv ~/.git ~/.git_old
-
-# if done properly, cloning the new repo and applying to the current files
-# should have no effect
-
 # https://www.chezmoi.io/quick-start/#using-chezmoi-across-multiple-machines
-# not sure if this will go to dotfiles or dotfiles_chezmoi
-rm -rf ~/.local/share/chezmoi/dotfiles/ # simulate fresh system
-chezmoi init git@github.com:hejops/dotfiles_chezmoi.git
-chezmoi diff
-chezmoi -v apply
+rm -rf ~/.local/share/chezmoi/dotfiles
+chezmoi init --apply hejops
+# chezmoi init git@github.com:hejops/dotfiles.git
+# chezmoi diff
+# chezmoi -v apply
+
+# let Lazy and Mason do their thing...
+wezterm start nvim &
 
 # git clone git@github.com:hejops/scripts.git
 # ~/scripts/install
-
-# let Lazy and Mason do their thing...
-kitty -e nvim &
-
 # bash ~/scripts/links ~/scripts # create symlinks in .local/bin
 # dwmstatus &
 
@@ -229,7 +174,7 @@ if [ -d /proc/acpi/button/lid ]; then
 	sudo sed -i 's|#HandleLidSwitch=suspend|HandleLidSwitch=ignore|' /etc/systemd/logind.conf
 
 	# increase trackpoint sensitivity, and enable press to select
-
+	# for persistent rules, udev rules must be created
 	# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
 	# https://wiki.archlinux.org/title/TrackPoint#udev_rule
 
@@ -265,13 +210,6 @@ vol --auto
 # /etc/pulse/system.pa
 # /etc/pulse/default.pa
 # didn't work
-
-# https://wiki.archlinux.org/title/TrackPoint#udev_rule
-# https://gist.githubusercontent.com/noromanba/11261595/raw/478cf4c4d9b63f1e59364a6f427ffccd63db5e1e/thinkpad-trackpoint-speed.mkd
-# for persistent rules, udev rules must be created
-cat << EOF | sudo tee /etc/udev/rules.d/10-trackpoint.rules
-ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="TPPS/2 IBM TrackPoint", ATTR{device/sensitivity}="240", ATTR{device/press_to_select}="1"
-EOF
 
 # groupadd i2c
 # # relogin required (?)
@@ -320,14 +258,13 @@ fi
 # installed to ~/.local/bin by default; this is included in $PATH
 PIPS=(
 
-	# doq
-	# gdown
-	# tabulate
 	black
+	django-stubs
 	jupytext
 	lastpy # why?
 	pandas
 	pylint
+	pylint-django
 	python-mpv
 )
 
@@ -384,11 +321,10 @@ setup_xdg_mime() {
 	# set xdgs -- ~/.config/mimeapps.list
 	# https://github.com/mwh/dragon
 
-	xdg-mime default firefox.desktop image/jpeg
-	xdg-mime default firefox.desktop image/png
+	xdg-mime default feh.desktop image/jpeg
+	xdg-mime default feh.desktop image/png
+	xdg-mime default nvim.desktop text/plain # TODO: https://unix.stackexchange.com/a/231302
 	xdg-mime default org.pwmt.zathura.desktop application/pdf
-	xdg-mime default ranger.desktop inode/directory
-	xdg-mime default vim.desktop text/plain # TODO: https://unix.stackexchange.com/a/231302
 }
 
 setup_printer() {
