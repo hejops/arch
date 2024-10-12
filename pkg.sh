@@ -36,8 +36,6 @@ sudo pacman -Syu
 
 grep < ./packages.txt -Po '^[^# \t]+' | xargs sudo pacman -S --needed
 
-# ssh -T git@github.com 2>&1 | grep -q authenticated || setup_git_ssh
-
 # get dotfiles and scripts
 
 cd
