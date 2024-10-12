@@ -25,6 +25,8 @@ fix_pacman_keys() {
 	sudo pacman-key --populate
 }
 
+sudo sed -i '/ParallelDownloads/ s|.+|ParallelDownloads = 5|' /etc/pacman.conf
+
 # fix_pacman_keys
 sudo pacman -Syu
 
