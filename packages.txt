@@ -72,6 +72,7 @@ mac			# ape decoder
 maim
 make
 man
+man-pages   # for glibc, etc
 mediainfo
 mednafen
 moreutils
