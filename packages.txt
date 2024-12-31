@@ -1,21 +1,17 @@
-# bash-language-server
-# biber
-# htop
-# jupyter-notebook
-# noto-fonts
-# noto-fonts-cjk	# quite large
-# otf-fira-mono
-# pulseaudio
-# rxvt-unicode
-# shellcheck
-# stow
-# stylua
-# texlive-bin
-# texlive-binextra
-# texlive-core
-# texlive-latexrecommended	# pdfjam
-# ttf-ibm-plex
-# vim
+# htop        # use htop-vim
+# dash
+# ddcutil
+# fd    # o
+# glxinfo
+# i3lock
+# kitty
+# lilypond
+# pcre
+# pulseaudio  # use pipewire
+# python-pdftotext
+# python-setuptools	# required for "import pkg_resources" calls
+# tig
+# visidata
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
 # youtube-dl	# replaced by yt-dlp
 ack
@@ -24,7 +20,7 @@ acpilight
 adobe-source-han-sans-cn-fonts
 adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
-aerc			# potential neomutt replacement
+aerc
 alsa-utils
 at
 chezmoi
@@ -33,12 +29,9 @@ clang
 cronie
 cuetools
 curl
-dash
-ddcutil
 dos2unix
 dunst
-exa
-fd    # o
+eza
 feh
 ffmpeg
 ffmpegthumbnailer
@@ -49,23 +42,18 @@ fzf
 git-absorb
 git-delta
 github-cli
-glxinfo
 gnupg
 groff
 hunspell
 hwinfo
-i3lock
 inetutils
 inxi
 isync
 jq
-kitty
 lame
-lf
 libnotify
 libreoffice-fresh
 libva-mesa-driver
-lilypond
 lowdown
 lshw
 mac			# ape decoder
@@ -93,18 +81,14 @@ p7zip
 pacman-contrib # checkupdates
 pandoc
 pavucontrol
-pcre
 pdftk
-perl-file-mimeinfo	# mimeopen (lf's default opener)
 picom
 pipewire
 pipewire-alsa
 pipewire-pulse
 playerctl
 prettier
-python-pdftotext
 python-pip
-python-setuptools	# required for "import pkg_resources" calls
 python3
 qjackctl
 qsynth
@@ -123,7 +107,6 @@ sof-firmware
 sysstat # mpstat
 system-config-printer
 telegram-desktop
-tig
 transmission-cli
 udiskie
 udisks2
@@ -133,7 +116,6 @@ usbutils # lsusb
 virtualbox
 virtualbox-guest-iso
 virtualbox-host-modules-arch
-visidata
 vulkan-radeon	# https://wiki.archlinux.org/title/Vulkan#Installation
 w3m
 wireless_tools
@@ -145,7 +127,6 @@ xorg-xrandr
 xorg-xsetroot
 xournalpp
 yt-dlp
-yuzu
 zathura-djvu
 zathura-pdf-mupdf
 zathura-ps
