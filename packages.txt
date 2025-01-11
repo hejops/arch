@@ -2,17 +2,26 @@
 # ack
 # at
 # biber
+# dash
+# ddcutil
 # font-manager
-# htop
+# glxinfo
+# htop        # use htop-vim
 # i3lock
 # jupyter-notebook
 # kitty
-# pulseaudio	# use pipewire instead
+# lilypond
+# pulseaudio  # use pipewire
 # python-pdftotext
+# python-setuptools	# required for "import pkg_resources" calls
+# stow
+# stylua
 # texlive-bin
 # texlive-binextra
 # texlive-core
 # texlive-latexrecommended	# pdfjam
+# tig
+# ttf-ibm-plex
 # vim
 # visidata  # vd
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
@@ -22,7 +31,7 @@ adobe-source-code-pro-fonts
 adobe-source-han-sans-cn-fonts
 adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
-aerc			# potential neomutt replacement
+aerc
 alsa-utils
 chezmoi
 chromium
@@ -30,8 +39,6 @@ clang
 cronie
 cuetools
 curl
-dash
-ddcutil
 dos2unix
 dunst
 eza
@@ -45,7 +52,6 @@ fzf
 git-absorb
 git-delta
 github-cli
-glxinfo
 gnupg
 groff
 himalaya		# potential neomutt replacement
@@ -60,13 +66,13 @@ lame
 libnotify
 libreoffice-fresh
 libva-mesa-driver
-lilypond
 lowdown
 lshw
 mac	# ape decoder
 maim
 make
 man
+man-pages   # for glibc, etc
 mediainfo
 mednafen
 moreutils
@@ -87,7 +93,6 @@ p7zip
 pacman-contrib # checkupdates
 pandoc
 pavucontrol
-pcre
 pdftk
 picom
 pipewire
@@ -96,7 +101,6 @@ pipewire-pulse
 playerctl
 prettier
 python-pip
-python-setuptools	# required for "import pkg_resources" calls
 python3
 qjackctl
 qsynth
@@ -116,7 +120,6 @@ sof-firmware
 sysstat # mpstat
 system-config-printer
 telegram-desktop
-tig
 transmission-cli
 udiskie
 udisks2
