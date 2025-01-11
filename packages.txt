@@ -1,32 +1,29 @@
-# bash-language-server
+#
+# ack
+# at
 # biber
+# font-manager
 # htop
+# i3lock
 # jupyter-notebook
-# noto-fonts
-# noto-fonts-cjk	# quite large
-# otf-fira-mono
-# pulseaudio
-# rxvt-unicode
-# shellcheck
-# stow
-# stylua
+# kitty
+# pulseaudio	# use pipewire instead
+# python-pdftotext
 # texlive-bin
 # texlive-binextra
 # texlive-core
 # texlive-latexrecommended	# pdfjam
-# ttf-ibm-plex
 # vim
+# visidata  # vd
 # xorg-xbacklight	# xbacklight doesn't work? neither does acpilight?
-# youtube-dl	# replaced by yt-dlp
-ack
 acpi
 acpilight
+adobe-source-code-pro-fonts
 adobe-source-han-sans-cn-fonts
 adobe-source-han-sans-jp-fonts
 adobe-source-han-sans-kr-fonts
 aerc			# potential neomutt replacement
 alsa-utils
-at
 chezmoi
 chromium
 clang
@@ -37,14 +34,13 @@ dash
 ddcutil
 dos2unix
 dunst
-exa
-fd    # o
+eza
+fd
 feh
 ffmpeg
 ffmpegthumbnailer
 firefox
 flac
-font-manager
 fzf
 git-absorb
 git-delta
@@ -52,23 +48,22 @@ github-cli
 glxinfo
 gnupg
 groff
+himalaya		# potential neomutt replacement
 hunspell
 hwinfo
-i3lock
 inetutils
+inter-font
 inxi
 isync
 jq
-kitty
 lame
-lf
 libnotify
 libreoffice-fresh
 libva-mesa-driver
 lilypond
 lowdown
 lshw
-mac			# ape decoder
+mac	# ape decoder
 maim
 make
 man
@@ -77,7 +72,7 @@ mednafen
 moreutils
 mp3info
 mpv
-mpv-mpris
+mpv-mpris # for playerctl
 musescore
 ncdu
 neomutt
@@ -94,14 +89,12 @@ pandoc
 pavucontrol
 pcre
 pdftk
-perl-file-mimeinfo	# mimeopen (lf's default opener)
 picom
 pipewire
-pipewire-alsa
+pipewire-alsa # required for musescore
 pipewire-pulse
 playerctl
 prettier
-python-pdftotext
 python-pip
 python-setuptools	# required for "import pkg_resources" calls
 python3
@@ -117,6 +110,7 @@ rsync
 rustup
 screenfetch
 shfmt
+slock
 socat
 sof-firmware
 sysstat # mpstat
@@ -132,7 +126,6 @@ usbutils # lsusb
 virtualbox
 virtualbox-guest-iso
 virtualbox-host-modules-arch
-visidata
 vulkan-radeon	# https://wiki.archlinux.org/title/Vulkan#Installation
 w3m
 wireless_tools
@@ -143,8 +136,8 @@ xorg-xinit
 xorg-xrandr
 xorg-xsetroot
 xournalpp
+yazi
 yt-dlp
-yuzu
 zathura-djvu
 zathura-pdf-mupdf
 zathura-ps
