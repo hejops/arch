@@ -237,6 +237,7 @@ if ! ls "$HOME/.config/etc/"*sf2; then
 	done
 
 	sf2_file=${ch##*/}
+	mkdir -p "$HOME/.config/etc"
 	mv "$sf2_file" "$HOME/.config/etc"
 	sf2_file="$HOME/.config/etc/$sf2_file"
 
@@ -253,22 +254,6 @@ if ! ls "$HOME/.config/etc/"*sf2; then
 
 fi
 
-# installed to ~/.local/bin by default; this is included in $PATH
-PIPS=(
-
-	black
-	django-stubs
-	jupytext
-	lastpy # why?
-	pandas
-	pylint
-	pylint-django
-	python-mpv
-)
-
-# pip install "${PIPS[@]}"
-python -m pip install "${PIPS[@]}"
-
 CARGO=(
 
 	funzzy
@@ -277,14 +262,32 @@ CARGO=(
 rustup default stable
 cargo install "${CARGO[@]}"
 
-# pip aborts install if a single arg produces an error
-# TODO: remove package imports (false positive)
-cat ~/scripts/*.py |
-	grep -Po '^(from|import) \w+' |
-	awk '{print $2}' |
-	sort -u |
-	# xargs -n1 pip --exists-action i install
-	xargs -n1 python -m pip --exists-action i install
+# go: html2markdown
+
+# # installed to ~/.local/bin by default; this is included in $PATH
+# PIPS=(
+#
+# 	black
+# 	django-stubs
+# 	jupytext
+# 	lastpy # why?
+# 	pandas
+# 	pylint
+# 	pylint-django
+# 	python-mpv
+# )
+#
+# # pip install "${PIPS[@]}"
+# python -m pip install "${PIPS[@]}"
+
+# # pip aborts install if a single arg produces an error
+# # TODO: remove package imports (false positive)
+# cat ~/scripts/*.py |
+# 	grep -Po '^(from|import) \w+' |
+# 	awk '{print $2}' |
+# 	sort -u |
+# 	# xargs -n1 pip --exists-action i install
+# 	xargs -n1 python -m pip --exists-action i install
 
 # install gtk theme
 cd
