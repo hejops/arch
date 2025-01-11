@@ -15,9 +15,10 @@ ping -c 1 archlinux.org || sudo nmtui
 
 # replace the mirrors from reflector since they're not very good
 
-# curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
-# 	sed -r 's|^#Server|Server|' |
-# 	sudo tee /etc/pacman.d/mirrorlist
+country=$(curl -sL "https://ipinfo.io" | jq -r .country)
+curl -s "https://archlinux.org/mirrorlist/?country=$country&protocol=https&ip_version=4&ip_version=6" |
+	sed -r 's|^#Server|Server|' |
+	sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu
 
