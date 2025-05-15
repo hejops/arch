@@ -84,22 +84,19 @@ if [[ -z \$SSH_AUTH_SOCK ]]; then
 	{
 		pkill ssh-agent
 		eval "\$(ssh-agent -s)"
-		# TODO: find | grep -v .pub
-		ssh-add "\$HOME/.ssh/github_2024-06-17"
+		find ~/.ssh | grep github | grep -v pub | xargs ssh-add
 	} > /dev/null 2> /dev/null
 fi
 
 exec dwm
-
 EOF
 
 # https://wiki.archlinux.org/title/Xinit#Autostart_X_at_login
 # https://unix.stackexchange.com/a/521049
 # apparently, .bash_profile is tried by default, while .profile is totally ignored
-# why does this EOF have single quotes? i honestly forgot
 
-cat << 'EOF' > "$HOME/.bash_profile"
-if [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
+cat << EOF > "$HOME/.bash_profile"
+if [ "\$DISPLAY" = "" ] && [ "\$XDG_VTNR" -eq 1 ]; then
 	exec startx
 fi
 EOF
