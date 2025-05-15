@@ -101,6 +101,8 @@ if [ "\$DISPLAY" = "" ] && [ "\$XDG_VTNR" -eq 1 ]; then
 fi
 EOF
 
+sudo sed -i -r 's/#SystemMaxUse.+/SystemMaxUse=100M/' /etc/systemd/journald.conf
+
 cat << EOF
 Successfully configured dwm
 dwm will be started automatically after logging back in
