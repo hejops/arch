@@ -37,15 +37,19 @@ setup_git_ssh() { # {{{
 
 	# https://cli.github.com/manual/gh_auth_login
 
-	if [ ! -f ~/.ssh/gh_hejops ]; then
+	ssh_key_name=github_$(date -I)
+
+	if [ ! -f ~/.ssh/"$ssh_key_name" ]; then
 		mkdir -p ~/.ssh
-		ssh-keygen -f ~/.ssh/gh_hejops -t ed25519 -C "hejops1@gmail.com"
+		# no long options :(
+		ssh-keygen -f ~/.ssh/"$ssh_key_name" -t ed25519 -C "hejops1@gmail.com"
 	fi
 
-	{
-		eval "$(ssh-agent -s)"
-		ssh-add ~/.ssh/gh_hejops
-	} > /dev/null 2> /dev/null
+	# # should be done on every login (xinitrc)
+	# {
+	# 	eval "$(ssh-agent -s)"
+	# 	ssh-add ~/.ssh/"$ssh_key_name"
+	# } > /dev/null 2> /dev/null
 
 	# https://cli.github.com/manual/gh_auth_login
 
@@ -54,14 +58,11 @@ setup_git_ssh() { # {{{
 		gh auth login
 	fi
 
-	MACHINE="$(cat /sys/devices/virtual/dmi/id/product_name)"
-
-	if ! gh ssh-key list | grep -q "$MACHINE"; then
-
-		gh auth refresh -h github.com -s admin:public_key
-		gh auth refresh -h github.com -s admin:ssh_signing_key
-		gh ssh-key add ~/.ssh/gh_hejops.pub --title "${MACHINE}_$(date -I)"
-
+	machine="$(cat /sys/devices/virtual/dmi/id/product_name)"
+	if ! gh ssh-key list | grep -q "$machine"; then
+		gh auth refresh --hostname github.com --scopes admin:public_key
+		gh auth refresh --hostname github.com --scopes admin:ssh_signing_key
+		gh ssh-key add --title "${machine}_$(date -I)" ~/.ssh/"$ssh_key_name".pub
 	fi
 } # }}}
 setup_git_ssh
