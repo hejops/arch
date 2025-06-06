@@ -259,14 +259,16 @@ sed -i -r 's|sda3|$DEV|' /boot/syslinux/syslinux.cfg
 # copy to bootloader to start of partition
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
 
-echo "Creating user: $USER"
+if useradd -G wheel,audio,video -m $USER; then
 
-useradd -G wheel,audio,video -m $USER
-passwd $USER < /dev/tty
-# usermod -G wheel $USER
+	echo "Creating user: $USER"
+	passwd $USER < /dev/tty
+	# usermod -G wheel $USER
 
-echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
-echo "Granted $USER root privileges"
+	echo '%wheel ALL=(ALL) ALL' | EDITOR='tee -a' visudo
+	echo "Granted $USER root privileges"
+
+fi
 
 echo "Cloning install scripts..."
 
