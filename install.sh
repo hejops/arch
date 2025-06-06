@@ -222,10 +222,10 @@ case $DEV in
 
 *nvme*)
 	umount /mnt || :
-	swapoff "${DEV}p2" || :
+	swapoff "${DEV}p3" || :
 
-	mount "${DEV}p1" /mnt
-	swapon "${DEV}p2"
+	mount "${DEV}p2" /mnt
+	swapon "${DEV}p3"
 	;;
 
 esac
