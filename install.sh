@@ -104,7 +104,7 @@ RAM=$((RAM + 1))
 CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
 umount /mnt || :
-swapon "${DEV}p2" || :
+swapoff "${DEV}p2" || :
 
 # TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
 # commands will be run blindly with no error handling
