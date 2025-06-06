@@ -52,114 +52,134 @@ fi
 DEV=$(ls /dev/nvme*n* | head -n1 || # /dev/nvme0n1 (not /dev/nvme0)
 	ls /dev/sd* | head -n1)            # /dev/sda
 
-# TODO: ensure dev is unmounted?
-# ls /mnt/* | head -n1
-# umount /mnt
-
-# https://serverfault.com/a/250845
-lsblk | grep "$(basename "$DEV")" && {
-	CHECK "Disk $DEV is not empty. All data on it will be irreversibly erased before proceeding. This cannot be undone."
-	dd if=/dev/zero of="$DEV" bs=512 count=1 conv=notrunc
+check_partitions() {
+	fdisk -l | grep -qPx "${DEV}p1 \*.+83 Linux"
+	fdisk -l | grep -qPx "${DEV}p2.+ 32G 82 Linux swap / Solaris"
+	return 0
 }
 
-# ls /usr/share/kbd/keymaps/**/*.map.gz
-# loadkeys LAYOUT
+if ! check_partitions; then
 
-# the "post-MBR gap" refers to the 2048 kB before the first partition
-# fdisk typically leaves it in place
-# this script uses MBR / BIOS
-# parted -l / ls /sys...
+	# TODO: ensure dev is unmounted?
+	# ls /mnt/* | head -n1
+	# umount /mnt
 
-timedatectl set-ntp true
-timedatectl status
+	# https://serverfault.com/a/250845
+	lsblk | grep "$(basename "$DEV")" && {
+		CHECK "Disk $DEV is not empty. All data on it will be irreversibly erased before proceeding. This cannot be undone."
+		dd if=/dev/zero of="$DEV" bs=512 count=1 conv=notrunc
+	}
 
-if ls /sys/firmware/efi/efivars; then
-	# MODE=UEFI
-	echo "UEFI mode"
-else
-	# MODE=BIOS
-	echo "BIOS mode"
+	# ls /usr/share/kbd/keymaps/**/*.map.gz
+	# loadkeys LAYOUT
+
+	# the "post-MBR gap" refers to the 2048 kB before the first partition
+	# fdisk typically leaves it in place
+	# this script uses MBR / BIOS
+	# parted -l / ls /sys...
+
+	timedatectl set-ntp true
+	timedatectl status
+
+	if ls /sys/firmware/efi/efivars; then
+		# MODE=UEFI
+		echo "UEFI mode"
+	else
+		# MODE=BIOS
+		echo "BIOS mode"
+	fi
+
+	fdisk -l "$DEV"
+
+	# typical windows scenario
+	# sda1: 50 MB (HPFS/NTFS/exFAT)
+	# sda2: most of the disk
+	# sda3: 500 MB (Hidden NTFS WinRE)
+
+	# RAM should be measured in gigs
+	RAM=$(free -g | awk '/Mem/ {print $2}')
+	RAM=$((RAM + 1))
+
+	# backup partition table
+	# sfdisk -d /dev/sda > sda.dump
+
+	# BIOS mode is used, root and 8GB swap (no home)
+	# this is obviously a hacky way to automate fdisk; use at your own risk!
+	# https://wiki.archlinux.org/title/Partitioning#Partitioning_tools
+	# https://gist.github.com/tuxfight3r/c640ab9d8eb3806a22b989581bcbed43
+	# https://www.thegeekstuff.com/2017/05/sfdisk-examples/
+
+	CHECK "Will create main partition and $RAM GB swap partition in $DEV"
+
+	umount /mnt || :
+	swapoff "${DEV}p2" || :
+
+	# TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
+	# commands will be run blindly with no error handling
+	#
+	# the manual way to delete partitions is to run `d` in fdisk repeatedly, but
+	# this is not scriptable
+	# https://phoenixnap.com/kb/delete-partition-linux
+
+	# TODO: remove all signatures (otherwise we get extra msg after -XG, currently
+	# we just workaround by pressing extra enter)
+
+	fdisk "$DEV" <<- EOF
+		n # new partition; use all space until last 32GB
+		p # primary; note: numeric inputs cannot be commented!
+		1
+
+		-${RAM}G
+
+		n
+		p
+		2
+
+
+		a # set 1st partition to bootable
+		1
+		t # set 2nd partition to swap
+		2
+		82
+		p # print
+		w # write and exit
+	EOF
+
+	# lsblk -f
+
+	fdisk -l | grep "$DEV"
+
+	CHECK "Wrote partition table"
+
+	check_partitions
+
+	case $DEV in
+
+	*sd*)
+		mkfs.ext4 "${DEV}1"
+		mkswap "${DEV}2"
+		;;
+
+	*nvme*)
+		# 'contains a vfat file system' msg can be ignored?
+		mkfs.ext4 "${DEV}p1"
+		mkswap "${DEV}p2"
+		;;
+
+	esac
+
 fi
-
-fdisk -l "$DEV"
-
-# typical windows scenario
-# sda1: 50 MB (HPFS/NTFS/exFAT)
-# sda2: most of the disk
-# sda3: 500 MB (Hidden NTFS WinRE)
-
-# RAM should be measured in gigs
-RAM=$(free -g | awk '/Mem/ {print $2}')
-RAM=$((RAM + 1))
-
-# backup partition table
-# sfdisk -d /dev/sda > sda.dump
-
-# BIOS mode is used, root and 8GB swap (no home)
-# this is obviously a hacky way to automate fdisk; use at your own risk!
-# https://wiki.archlinux.org/title/Partitioning#Partitioning_tools
-# https://gist.github.com/tuxfight3r/c640ab9d8eb3806a22b989581bcbed43
-# https://www.thegeekstuff.com/2017/05/sfdisk-examples/
-
-CHECK "Will create main partition and $RAM GB swap partition in $DEV"
-
-umount /mnt || :
-swapoff "${DEV}p2" || :
-
-# TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
-# commands will be run blindly with no error handling
-#
-# the manual way to delete partitions is to run `d` in fdisk repeatedly, but
-# this is not scriptable
-# https://phoenixnap.com/kb/delete-partition-linux
-
-# TODO: remove all signatures (otherwise we get extra msg after -XG, currently
-# we just workaround by pressing extra enter)
-
-fdisk "$DEV" << EOF
-n # new partition; use all space until last 32GB
-p # primary; note: numeric inputs cannot be commented!
-1
-
--${RAM}G
-
-n
-p
-2
-
-
-a # set 1st partition to bootable
-1
-t # set 2nd partition to swap
-2
-82
-p # print
-w # write and exit
-EOF
-
-# lsblk -f
-
-fdisk -l | grep "$DEV"
-fdisk -l | grep -qPx "${DEV}p1 \*.+83 Linux"
-fdisk -l | grep -qPx "${DEV}p2.+ 32G 82 Linux swap / Solaris"
-
-CHECK "Wrote partition table"
 
 case $DEV in
 
 *sd*)
-	mkfs.ext4 "${DEV}1"
-	mkswap "${DEV}2"
-	swapon "${DEV}2"
 	mount "${DEV}1" /mnt
+	swapon "${DEV}2"
 	;;
 
 *nvme*)
-	# 'contains a vfat file system' msg can be ignored?
-	mkfs.ext4 "${DEV}p1"
-	mkswap "${DEV}p2"
-	swapon "${DEV}p2"
 	mount "${DEV}p1" /mnt
+	swapon "${DEV}p2"
 	;;
 
 esac
