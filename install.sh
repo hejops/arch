@@ -31,13 +31,21 @@ CHECK() {
 	unset ans
 }
 
-# lsblk | grep 'sd. ' | grep -v T | cut -d' ' -f1
-DEV=/dev/sda
+# machines usually use nvme (ssd) these days
+
+# if ls /dev/nvme*; then
+# 	DEV=$(ls /dev/nvme* | head -n1) # /dev/nvme0
+# else
+# 	DEV=$(ls /dev/sd* | head -n1) # /dev/sda
+# fi
+
+DEV=$(ls /dev/nvme* | head -n1 || # /dev/nvme0
+	ls /dev/sd* | head -n1)          # /dev/sda
 
 # https://serverfault.com/a/250845
-lsblk | grep sda1 && {
+lsblk | grep "$(basename "$DEV")" && {
 	CHECK "Disk $DEV is not empty. All data on it will be irreversibly erased before proceeding. This cannot be undone."
-	dd if=/dev/zero of=/dev/sda bs=512 count=1 conv=notrunc
+	dd if=/dev/zero of="$DEV" bs=512 count=1 conv=notrunc
 }
 
 # ls /usr/share/kbd/keymaps/**/*.map.gz
