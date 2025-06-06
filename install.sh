@@ -188,11 +188,13 @@ esac
 curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
 	sed -r 's|^#Server|Server|' > /etc/pacman.d/mirrorlist
 
-# TODO: remove community -- https://forum.manjaro.org/t/community-db-failed-to-download-how-do-i-resolve-this/175113
-# /etc/pacman.conf
+# remove community -- https://forum.manjaro.org/t/community-db-failed-to-download-how-do-i-resolve-this/175113
+if < /etc/pacman.conf grep -P '^\[community'; then
+	sed -i -r '/^\[community/,/Include/d' /etc/pacman.conf
+fi
 
 # force keyring update
-pacman -Sy archlinux-keyring
+pacman -Sy --noconfirm archlinux-keyring
 
 # gvim has clipboard support (has('clipboard')), vim-minimal doesn't
 # 1.65 GB
