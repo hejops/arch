@@ -103,6 +103,9 @@ RAM=$((RAM + 1))
 
 CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
+umount /mnt || :
+swapon "${DEV}p2" || :
+
 # TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
 # commands will be run blindly with no error handling
 #
@@ -110,7 +113,8 @@ CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 # this is not scriptable
 # https://phoenixnap.com/kb/delete-partition-linux
 
-# TODO: remove vfat signature? (otherwise need extra enter after -XG)
+# TODO: remove all signatures (otherwise we get extra msg after -XG, currently
+# we just workaround by pressing extra enter)
 
 fdisk "$DEV" << EOF
 n # new partition
@@ -118,6 +122,7 @@ p # primary
 1 # partition number
 
 -${RAM}G # use all space until last 32GB
+
 n
 p
 2
