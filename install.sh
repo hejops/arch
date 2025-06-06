@@ -118,8 +118,8 @@ swapoff "${DEV}p2" || :
 
 fdisk "$DEV" << EOF
 n # new partition
-p # primary
-1 # partition number
+p # primary; note: numeric inputs cannot be commented
+1
 
 -${RAM}G # use all space until last 32GB
 
