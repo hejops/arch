@@ -39,6 +39,16 @@ CHECK() {
 # 	DEV=$(ls /dev/sd* | head -n1) # /dev/sda
 # fi
 
+if [ -d ./tmp ]; then
+	# transfer files to another machine on same network. transferring the
+	# files back to the machine is an exercise left to the reader
+
+	# mount /dev/nvme0n1p2 /mnt
+	local_ip=$(ip a | grep -P 'inet .+wlan0$' | awk '{print $2}' | xargs dirname)
+	echo "ip: $local_ip"
+	python -m http.server -d ./tmp
+fi
+
 DEV=$(ls /dev/nvme* | head -n1 || # /dev/nvme0
 	ls /dev/sd* | head -n1)          # /dev/sda
 
