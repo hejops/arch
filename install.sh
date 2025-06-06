@@ -53,8 +53,15 @@ DEV=$(ls /dev/nvme*n* | head -n1 || # /dev/nvme0n1 (not /dev/nvme0)
 	ls /dev/sd* | head -n1)            # /dev/sda
 
 check_partitions() {
-	fdisk -l | grep -qPx "${DEV}p1 \*.+83 Linux"
-	fdisk -l | grep -qPx "${DEV}p2.+ 32G 82 Linux swap / Solaris"
+	# bios
+	# fdisk -l | grep -qPx "${DEV}p1 \*.+83 Linux"
+	# fdisk -l | grep -qPx "${DEV}p2.+ 32G 82 Linux swap / Solaris"
+
+	# uefi
+	fdisk -l | grep -qPx "${DEV}p1 \*.+ef EFI \(FAT-12/16/32\)"
+	fdisk -l | grep -qPx "${DEV}p2 \*.+83 Linux"
+	fdisk -l | grep -qPx "${DEV}p3.+ 32G 82 Linux swap / Solaris"
+
 	return 0
 }
 
@@ -120,29 +127,64 @@ if ! check_partitions; then
 
 	# TODO: remove all signatures (otherwise we get extra msg after -XG, currently
 	# we just workaround by pressing extra enter)
+	# sudo wipefs "$DEV"
+
+	# # bios
+	# fdisk "$DEV" <<- EOF
+	# 	n # new partition; use all space until last 32GB
+	# 	p # primary; note: numeric inputs cannot be commented!
+	# 	1
+	#
+	# 	-${RAM}G
+	#
+	# 	n
+	# 	p
+	# 	2
+	#
+	#
+	# 	a # set 1st partition to bootable
+	# 	1
+	# 	t # set 2nd partition to swap
+	# 	2
+	# 	82
+	# 	p # print
+	# 	w # write and exit
+	# EOF
+
+	# uefi; my main machine has
+	# Device             Start       End   Sectors   Size Type
+	# /dev/nvme0n1p1      2048    206847    204800   100M EFI System
+	# /dev/nvme0n1p5 768352256 973152255 204800000  97.7G Linux filesystem
+	# (p2-p4 = windows)
 
 	fdisk "$DEV" <<- EOF
 		n # new partition; use all space until last 32GB
 		p # primary; note: numeric inputs cannot be commented!
 		1
 
-		-${RAM}G
+		+100M
 
+		n 
+		p
+		2
+
+		-32G
 		n
 		p
 		2
 
 
-		a # set 1st partition to bootable
+		a # set 1st partition to bootable (not sure if needed)
 		1
-		t # set 2nd partition to swap
-		2
+		t # set 1st partition to type efi
+		1
+		ef
+		t # set 3rd partition to swap
+		3
 		82
 		p # print
 		w # write and exit
 	EOF
-
-	# lsblk -f
 
 	fdisk -l | grep "$DEV"
 
@@ -159,8 +201,12 @@ if ! check_partitions; then
 
 	*nvme*)
 		# 'contains a vfat file system' msg can be ignored?
-		mkfs.ext4 "${DEV}p1"
-		mkswap "${DEV}p2"
+		# mkfs.ext4 "${DEV}p1"
+		# mkswap "${DEV}p2"
+
+		mkfs.fat -F 32 "${DEV}p1" # https://wiki.archlinux.org/title/EFI_system_partition#Format_the_partition
+		mkfs.ext4 "${DEV}p2"
+		mkswap "${DEV}p3"
 		;;
 
 	esac
@@ -215,6 +261,7 @@ echo "Hostname:"
 read -r HOSTNAME < /dev/tty
 
 USER=joseph
+ESP=/boot/EFI
 
 cat << EOF | arch-chroot /mnt
 set -eu
@@ -247,19 +294,31 @@ echo "Setting up syslinux bootloader..."
 
 # https://wiki.archlinux.org/title/Syslinux#Manually
 
-mkdir -p /boot/syslinux
-cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
-cp /usr/share/syslinux/syslinux.cfg /boot/syslinux/syslinux.cfg
+# /sys/firmware/efi
 
-# just reports '/boot/syslinux is /dev/nv...' (?)
-extlinux --install /boot/syslinux 
+# mkdir -p /boot/syslinux
+# cp /usr/lib/syslinux/bios/*.c32 /usr/share/syslinux/syslinux.cfg /boot/syslinux
+#
+# # just reports '/boot/syslinux is /dev/nv...' (?)
+# extlinux --install /boot/syslinux 
+#
+# # copy to bootloader to start of partition
+# dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
 
+# https://wiki.archlinux.org/title/Syslinux#Deployment
+mkdir -p $ESP/syslinux
+cp -r /usr/lib/syslinux/efi64/* $ESP/syslinux
+cp /usr/share/syslinux/syslinux.cfg $ESP/syslinux
+efibootmgr --create --disk $(echo "$DEV" | cut -dp -f1) --part $(echo "$DEV" | grep -Po 'p\d') --loader /EFI/syslinux/syslinux.efi --label "Syslinux" --unicode
+
+# i.e.
+# efibootmgr --create --disk /dev/nvme0n1 --part p1 --loader /EFI/syslinux/syslinux.efi --label "Syslinux" --unicode
+# (hopefully p1 and not 1)
+
+# config should be same, regardless of bios/uefi
 # traditionally APPEND root=/dev/...; consider APPEND root=UUID=...
 # https://wiki.archlinux.org/title/Syslinux#Chainloading_other_Linux_systems
 sed -i -r 's|/dev/sda3|$DEV|' /boot/syslinux/syslinux.cfg
-
-# copy to bootloader to start of partition
-dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
 
 # ^$USER may not work, for some reason
 if ! < /etc/passwd /$USER; then
@@ -287,8 +346,8 @@ Setup complete.
 Partitions:
 $(fdisk -l | grep "$DEV")
 
-Bootloader:
-$(cat /mnt/boot/syslinux/syslinux.cfg)
+# Bootloader:
+# $(cat /mnt/boot/syslinux/syslinux.cfg)
 
 fstab:
 $(cat /mnt/etc/fstab)
