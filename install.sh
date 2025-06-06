@@ -270,10 +270,11 @@ if useradd -G wheel,audio,video -m $USER; then
 
 fi
 
-echo "Cloning install scripts..."
-
-cd /home/$USER
-git clone https://github.com/hejops/arch
+if [ ! -d /home/$USER/arch ]; then
+	echo "Cloning install scripts..."
+	cd /home/$USER
+	git clone https://github.com/hejops/arch
+fi
 EOF
 
 cat << EOF
