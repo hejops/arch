@@ -231,8 +231,9 @@ locale-gen
 
 echo "$HOSTNAME" > /etc/hostname
 
-echo "127.0.0.1  localhost" >> /etc/hosts
-echo "::1        localhost" >> /etc/hosts
+# these 2 lines should already be present
+# echo "127.0.0.1  localhost" >> /etc/hosts
+# echo "::1        localhost" >> /etc/hosts
 echo "127.0.1.1  $HOSTNAME" >> /etc/hosts
 
 mkinitcpio -P
