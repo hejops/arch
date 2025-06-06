@@ -103,28 +103,41 @@ RAM=$((RAM + 1))
 
 CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
-fdisk "$DEV" << EOF
-n
-p
-1
+# TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
+# commands will be run blindly with no error handling
+#
+# the manual way to delete partitions is to run `d` in fdisk repeatedly, but
+# this is not scriptable
+# https://phoenixnap.com/kb/delete-partition-linux
 
--${RAM}G
+# TODO: remove vfat signature? (otherwise need extra enter after -XG)
+
+fdisk "$DEV" << EOF
+n # new partition
+p # primary
+1 # partition number
+
+-${RAM}G # use all space until last 32GB
 n
 p
 2
 
 
-a
+a # set 1st partition to bootable
 1
-t
+t # set 2nd partition to swap
 2
 82
-p
-w
+p # print
+w # write and exit
 EOF
 
-# lsblk
+# lsblk -f
+
 fdisk -l | grep "$DEV"
+fdisk -l | grep -qPx "${DEV}p1 \*.+83 Linux"
+fdisk -l | grep -qPx "${DEV}p2.+ 32G 82 Linux swap / Solaris"
+
 CHECK "Wrote partition table"
 
 case $DEV in
@@ -137,6 +150,7 @@ case $DEV in
 	;;
 
 *nvme*)
+	# 'contains a vfat file system' msg can be ignored?
 	mkfs.ext4 "${DEV}p1"
 	mkswap "${DEV}p2"
 	swapon "${DEV}p2"
@@ -145,16 +159,19 @@ case $DEV in
 
 esac
 
+# mkdir -p /mnt/etc/pacman.d
 curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
-	sed -r 's|^#Server|Server|' > /mnt/etc/pacman.d/mirrorlist
+	sed -r 's|^#Server|Server|' > /etc/pacman.d/mirrorlist
 
-# reflector
+# TODO: remove community -- https://forum.manjaro.org/t/community-db-failed-to-download-how-do-i-resolve-this/175113
+# /etc/pacman.conf
+
+# force keyring update
+pacman -Sy archlinux-keyring
 
 # gvim has clipboard support (has('clipboard')), vim-minimal doesn't
-if ! pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo; then
-	echo "Newer Arch ISO required"
-	exit 1
-fi
+# 1.65 GB
+pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo
 
 # TODO: consider noatime?
 # https://opensource.com/article/20/6/linux-noatime
@@ -199,11 +216,21 @@ passwd < /dev/tty
 
 echo "Setting up syslinux bootloader..."
 
+# https://wiki.archlinux.org/title/Syslinux#Manually
+
 mkdir -p /boot/syslinux
 cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
-extlinux --install /boot/syslinux
-sed -i -r 's|sda3|sda1|' /boot/syslinux/syslinux.cfg
-dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=/dev/sda
+
+# just reports '/boot/syslinux is /dev/nv...' (?)
+extlinux --install /boot/syslinux 
+
+# TODO: is this file supposed to exist?
+if [ -f /boot/syslinux/syslinux.cfg ]; then
+	sed -i -r 's|sda3|sda1|' /boot/syslinux/syslinux.cfg
+fi
+
+# copy to bootloader to start of partition
+dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
 
 echo "Creating user: $USER"
 
@@ -216,7 +243,7 @@ echo "Granted $USER root privileges"
 
 echo "Cloning install scripts..."
 
-cd /home/joseph
+cd /home/$USER
 git clone https://github.com/hejops/arch
 EOF
 
