@@ -31,14 +31,6 @@ CHECK() {
 	unset ans
 }
 
-# machines usually use nvme (ssd) these days
-
-# if ls /dev/nvme*; then
-# 	DEV=$(ls /dev/nvme* | head -n1) # /dev/nvme0
-# else
-# 	DEV=$(ls /dev/sd* | head -n1) # /dev/sda
-# fi
-
 if [ -d ./tmp ]; then
 	# transfer files to another machine on same network. transferring the
 	# files back to the machine is an exercise left to the reader
@@ -49,8 +41,16 @@ if [ -d ./tmp ]; then
 	python -m http.server -d ./tmp
 fi
 
-DEV=$(ls /dev/nvme* | head -n1 || # /dev/nvme0
-	ls /dev/sd* | head -n1)          # /dev/sda
+# machines usually use nvme (ssd) these days
+
+# if ls /dev/nvme*; then
+# 	DEV=$(ls /dev/nvme* | head -n1) # /dev/nvme0
+# else
+# 	DEV=$(ls /dev/sd* | head -n1) # /dev/sda
+# fi
+
+DEV=$(ls /dev/nvme*n* | head -n1 || # /dev/nvme0n1 (not /dev/nvme0)
+	ls /dev/sd* | head -n1)            # /dev/sda
 
 # https://serverfault.com/a/250845
 lsblk | grep "$(basename "$DEV")" && {
