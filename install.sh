@@ -111,9 +111,6 @@ if ! check_partitions; then
 
 	CHECK "Will create main partition and $RAM GB swap partition in $DEV"
 
-	umount /mnt || :
-	swapoff "${DEV}p2" || :
-
 	# TODO: before fdisk, disk must be empty with no partitions. otherwise fdisk
 	# commands will be run blindly with no error handling
 	#
@@ -178,6 +175,9 @@ case $DEV in
 	;;
 
 *nvme*)
+	umount /mnt || :
+	swapoff "${DEV}p2" || :
+
 	mount "${DEV}p1" /mnt
 	swapon "${DEV}p2"
 	;;
@@ -210,6 +210,7 @@ pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo
 # https://wiki.archlinux.org/title/Fstab#atime_options
 < /mnt/etc/fstab grep "^UUID" || genfstab -U /mnt >> /mnt/etc/fstab
 
+# TODO: usually i set this to USER, but it should really be the machine name
 echo "Hostname:"
 read -r HOSTNAME < /dev/tty
 
@@ -255,12 +256,14 @@ extlinux --install /boot/syslinux
 
 # traditionally APPEND root=/dev/...; consider APPEND root=UUID=...
 # https://wiki.archlinux.org/title/Syslinux#Chainloading_other_Linux_systems
-sed -i -r 's|sda3|$DEV|' /boot/syslinux/syslinux.cfg
+sed -i -r 's|/dev/sda3|$DEV|' /boot/syslinux/syslinux.cfg
 
 # copy to bootloader to start of partition
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
 
-if useradd -G wheel,audio,video -m $USER; then
+# ^$USER may not work, for some reason
+if ! < /etc/passwd /$USER; then
+	useradd -G wheel,audio,video -m $USER
 
 	echo "Creating user: $USER"
 	passwd $USER < /dev/tty
@@ -297,5 +300,5 @@ EOF
 CHECK "The system will now be rebooted. Remove the installation media and ensure Linux boot loader has top priority."
 # [Aptio] Boot > UEFI Priorities
 
-# umount not strictly required
+umount /mnt # not strictly required
 reboot now
