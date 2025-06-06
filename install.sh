@@ -52,6 +52,10 @@ fi
 DEV=$(ls /dev/nvme*n* | head -n1 || # /dev/nvme0n1 (not /dev/nvme0)
 	ls /dev/sd* | head -n1)            # /dev/sda
 
+# TODO: ensure dev is unmounted?
+# ls /mnt/* | head -n1
+# umount /mnt
+
 # https://serverfault.com/a/250845
 lsblk | grep "$(basename "$DEV")" && {
 	CHECK "Disk $DEV is not empty. All data on it will be irreversibly erased before proceeding. This cannot be undone."
@@ -123,11 +127,23 @@ EOF
 fdisk -l | grep "$DEV"
 CHECK "Wrote partition table"
 
-mkfs.ext4 "${DEV}1"
-mkswap "${DEV}2"
-swapon "${DEV}2"
+case $DEV in
 
-mount "${DEV}1" /mnt
+*sd*)
+	mkfs.ext4 "${DEV}1"
+	mkswap "${DEV}2"
+	swapon "${DEV}2"
+	mount "${DEV}1" /mnt
+	;;
+
+*nvme*)
+	mkfs.ext4 "${DEV}p1"
+	mkswap "${DEV}p2"
+	swapon "${DEV}p2"
+	mount "${DEV}p1" /mnt
+	;;
+
+esac
 
 curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&ip_version=4&ip_version=6" |
 	sed -r 's|^#Server|Server|' > /mnt/etc/pacman.d/mirrorlist
