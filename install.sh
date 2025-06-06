@@ -208,7 +208,7 @@ pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux sudo
 # used; using the relatime option is acceptable and still provides a
 # performance improvement."
 # https://wiki.archlinux.org/title/Fstab#atime_options
-grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >> /mnt/etc/fstab
+< /mnt/etc/fstab grep "^UUID" || genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "Hostname:"
 read -r HOSTNAME < /dev/tty
@@ -247,14 +247,14 @@ echo "Setting up syslinux bootloader..."
 
 mkdir -p /boot/syslinux
 cp /usr/lib/syslinux/bios/*.c32 /boot/syslinux/
+cp /usr/share/syslinux/syslinux.cfg /boot/syslinux/syslinux.cfg
 
 # just reports '/boot/syslinux is /dev/nv...' (?)
 extlinux --install /boot/syslinux 
 
-# TODO: is this file supposed to exist?
-if [ -f /boot/syslinux/syslinux.cfg ]; then
-	sed -i -r 's|sda3|sda1|' /boot/syslinux/syslinux.cfg
-fi
+# traditionally APPEND root=/dev/...; consider APPEND root=UUID=...
+# https://wiki.archlinux.org/title/Syslinux#Chainloading_other_Linux_systems
+sed -i -r 's|sda3|$DEV|' /boot/syslinux/syslinux.cfg
 
 # copy to bootloader to start of partition
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
