@@ -1,13 +1,18 @@
 #!/usr/bin/env sh
 set -eu
 
+# configure partitions, locale, timezone, bootloader, account(s), all within
+# the archiso image. then reboot and run post.sh.
+
 if ! fdisk -l; then
 	echo "Try a different USB port."
 	echo "If this error persists, Arch ISO is possibly corrupt."
 	exit 1
 fi
 
-[ "$(hostname)" != archiso ] && exit
+# hostname not available in archiso
+# $USER is root
+[ "$(uname -n)" != archiso ] && exit
 
 # https://wiki.archlinux.org/title/Installation_guide
 # https://github.com/wincent/wincent/blob/master/contrib/arch-linux/arch-linux-install.sh
@@ -54,7 +59,7 @@ else
 	echo "BIOS mode"
 fi
 
-fdisk -l $DEV
+fdisk -l "$DEV"
 
 # typical windows scenario
 # sda1: 50 MB (HPFS/NTFS/exFAT)
@@ -117,6 +122,14 @@ if ! pacstrap /mnt base linux linux-firmware vi gvim git networkmanager syslinux
 	exit 1
 fi
 
+# TODO: consider noatime?
+# https://opensource.com/article/20/6/linux-noatime
+#
+# "When using Mutt or other applications that need to know if a file has been
+# read since the last time it was modified, the noatime option should not be
+# used; using the relatime option is acceptable and still provides a
+# performance improvement."
+# https://wiki.archlinux.org/title/Fstab#atime_options
 grep "^UUID" /mnt/etc/fstab || genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "Hostname:"
